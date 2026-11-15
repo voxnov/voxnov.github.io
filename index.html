@@ -1728,7 +1728,7 @@ $("landing").innerHTML='<div class="card" style="text-align:center;padding:28px 
 +'<input id="lp-nama" style="width:100%" placeholder="misal: Budi / Siti" maxlength="30" value="'+esc(S.nama||'')+'"></div>'
 +'<div><label for="lp-sekolah" style="font-weight:700;font-size:14px;display:block;margin-bottom:4px">Asal Sekolah:</label>'
 +'<input id="lp-sekolah" style="width:100%" placeholder="misal: SDN 1 Merdeka" maxlength="40" value="'+esc(S.sekolah||'')+'"></div></div>'
-+'<div><label for="lp-kode" style="font-weight:700;font-size:14px;display:block;margin-bottom:4px">Kode Sinkron (opsional):</label><input id="lp-kode" style="width:100%" placeholder="kode rahasia dari orang tua" maxlength="40" autocomplete="off" value="'+esc(S.kode||'')+'"></div>'
++'<div><label for="lp-kode" style="font-weight:700;font-size:14px;display:block;margin-bottom:4px">Token:</label><input id="lp-kode" style="width:100%" placeholder="isikan token" maxlength="40" autocomplete="off" value="'+esc(S.kode||'')+'"></div>'
 +'<p id="lp-err" class="small" style="color:var(--coral);font-weight:700;margin:0;min-height:20px" role="alert"></p>'
 +'<button class="btn sun" id="lp-btn" style="width:100%;font-size:19px;padding:12px 16px">'+(isEdit?'Simpan & Lanjut Belajar 🚀':'Mulai Masuk Arena Juara 🚀')+'</button>'
 +(isEdit?'<button class="btn ghost" id="lp-cancel" style="width:100%;margin-top:4px">Batal</button>':'')
@@ -1739,7 +1739,7 @@ function setRole(r){role=r;$("lp-anak").style.display=r==="anak"?"flex":"none";$
 $("role-anak").onclick=function(){setRole("anak")};$("role-ortu").onclick=function(){setRole("ortu")};
 function go(){
 var kd=$("lp-kode").value.trim();
-if(kd&&kd.length<6){$("lp-err").textContent="Kode sinkron minimal 6 karakter.";$("lp-kode").focus();return}
+if(kd&&kd.length<6){$("lp-err").textContent="Token minimal 6 karakter.";$("lp-kode").focus();return}
 if(role==="anak"){
 var nm=$("lp-nama").value.trim(),sch=$("lp-sekolah").value.trim();
 if(!nm){$("lp-err").textContent="Mohon isi nama kamu terlebih dahulu ya.";$("lp-nama").focus();return}
@@ -1793,8 +1793,8 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 +'<div class="card"><h3>Daftar hadiah</h3>'+S.hadiah.map(function(r){return'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+esc(r.e)+' '+esc(r.n)+' · '+r.p+' poin</span><button class="btn ghost" data-d="'+r.id+'">Hapus</button></div>'}).join("")
 +'<h3 style="margin-top:14px">Tambah hadiah</h3><div class="row"><input id="ne" placeholder="🎁" maxlength="2" style="width:60px"><input id="nn" placeholder="Nama hadiah" style="flex:1"><input id="np" type="number" placeholder="Poin" min="1" style="width:90px"><button class="btn sun" id="add">Tambah hadiah</button></div></div>'
 +'<div class="card"><h3>Riwayat penukaran</h3>'+(S.riwayat.length?S.riwayat.slice(0,15).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.e)+' '+esc(x.n)+' (−'+x.p+')</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>')+'</div>'
-+'<div class="card"><h3>Sinkron progress (cloud)</h3><p class="small">Role device ini: <b>'+(S.role==="ortu"?"Orang Tua":"Anak")+'</b>. '+(S.role==="ortu"?"Masukkan kode sinkron yang sama dengan device anak, lalu lihat progress anak.":"Progress dikirim otomatis ke cloud selama kode sinkron terisi (min. 6 karakter).")+'</p>'
-+'<div class="row"><input id="cl-kode" placeholder="Kode sinkron rahasia" maxlength="40" autocomplete="off" style="flex:1;min-width:170px" value="'+esc(S.kode||"")+'"></div>'
++'<div class="card"><h3>Sinkron progress (cloud)</h3><p class="small">Role device ini: <b>'+(S.role==="ortu"?"Orang Tua":"Anak")+'</b>. '+(S.role==="ortu"?"Masukkan token yang sama dengan device anak, lalu lihat progress anak.":"Progress dikirim otomatis ke cloud selama token terisi (min. 6 karakter).")+'</p>'
++'<div class="row"><input id="cl-kode" placeholder="isikan token" maxlength="40" autocomplete="off" style="flex:1;min-width:170px" value="'+esc(S.kode||"")+'"></div>'
 +'<div class="row" style="margin-top:8px">'+(S.role==="ortu"?'<button class="btn" id="cl-lihat">Lihat progress anak</button>':'<button class="btn sun" id="cl-now">Kirim sekarang</button>')+'<button class="btn ghost" id="cl-out">Ganti Role / Logout</button></div>'
 +'<p class="small" id="cl-msg" role="status">'+(SB_URL&&SB_KEY?"":"Cloud belum disetel: isi SB_URL dan SB_KEY di index.html.")+'</p><div id="cl-view"></div></div>'
 +'<div class="card"><h3>Riwayat poin</h3>'+(S.poinLog.length?S.poinLog.slice(0,20).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+(x.v>0?"+":"−")+Math.abs(x.v)+' poin · '+esc(x.ket)+'</div>'}).join(""):'<p class="small">Belum ada penambahan atau pengurangan poin manual.</p>')+'</div>'
@@ -1826,10 +1826,10 @@ if(S.role==="ortu"){var cdk=$("cl-msg").parentNode;el.insertBefore(cdk,el.firstC
 function clMsg(t){$("cl-msg").textContent=t}
 $("cl-kode").onchange=function(){S.kode=this.value.trim();syncKirim();save();if(S.kirim)cloudPush()};
 $("cl-out").onclick=function(){ask("Ganti role / logout dari device ini? Poin dan hadiah tetap tersimpan.",doLogout)};
-if($("cl-now"))$("cl-now").onclick=function(){S.kode=$("cl-kode").value.trim();save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi kode sinkron minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
+if($("cl-now"))$("cl-now").onclick=function(){S.kode=$("cl-kode").value.trim();save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
 var k=S.kirim;S.kirim=true;clMsg("Mengirim…");cloudPush().then(function(ok){S.kirim=k;clMsg(ok?"Berhasil terkirim ✅":"Gagal mengirim. Cek koneksi dan pengaturan Supabase.")})};
-if($("cl-lihat"))$("cl-lihat").onclick=function(){var kd=$("cl-kode").value.trim();S.kode=kd;save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi kode sinkron minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
-clMsg("Mengambil data…");sbCall("get_progress",{p_id:kd}).then(function(rows){var r=rows&&rows[0];if(!r){clMsg("Belum ada data untuk kode ini.");$("cl-view").innerHTML="";return}
+if($("cl-lihat"))$("cl-lihat").onclick=function(){var kd=$("cl-kode").value.trim();S.kode=kd;save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
+clMsg("Mengambil data…");sbCall("get_progress",{p_id:kd}).then(function(rows){var r=rows&&rows[0];if(!r){clMsg("Belum ada data untuk token ini.");$("cl-view").innerHTML="";return}
 var d=r.data||{},fm=function(t){try{return new Date(t).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}};
 clMsg("Data terakhir diperbarui: "+fm(r.updated_at));
 var ss=(d.sesi||[]).slice(0,10),rw=(d.riwayat||[]).slice(0,10);
