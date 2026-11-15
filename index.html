@@ -101,10 +101,33 @@ function sbCall(fn,args){return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",h
 function cloudReady(){return !!(SB_URL&&SB_KEY&&S&&S.kode&&S.kode.length>=6)}
 function syncKirim(){S.kirim=(S.role==="anak")&&!!S.kode&&S.kode.length>=6}
 function needLogin(){return !S.role||(S.role==="anak"&&(!S.nama||!S.sekolah))}
-function doLogout(){Q=null;unlocked=false;S.nama="";S.sekolah="";S.role="";S.kirim=false;save();upd();renderLanding(false);toast("Berhasil logout")}
+function doLogout(){Q=null;unlocked=false;ortuSynced=false;RC=null;S.nama="";S.sekolah="";S.role="";S.kirim=false;save();upd();renderLanding(false);toast("Berhasil logout")}
+function logPoin(v,ket){S.poinLog=S.poinLog||[];S.poinLog.unshift({t:new Date().toLocaleDateString("id-ID",{day:"numeric",month:"short"}),v:v,ket:ket});if(S.poinLog.length>50)S.poinLog.length=50}
+var RC=null,ortuSynced=false;
+function ortuId(){return S.kode+"#ortu"}
+function ortuUpdate(fn){if(!cloudReady())return Promise.resolve(false);
+return sbCall("get_progress",{p_id:ortuId()}).then(function(rows){var d=(rows&&rows[0]&&rows[0].data)||{};fn(d);return sbCall("save_progress",{p_id:ortuId(),p_data:d})}).then(function(){return true}).catch(function(){return false})}
+function hadiahChanged(){S.hv=Date.now();save();var h=S.hadiah,v=S.hv;ortuUpdate(function(d){d.hadiah=h;d.hv=v})}
+function sendCmd(v,ket){var c={id:Date.now()+"-"+Math.random().toString(36).slice(2,7),v:v,ket:ket,t:Date.now()};
+return ortuUpdate(function(d){d.cmds=(d.cmds||[]).concat([c]).slice(-50)})}
+function cloudPull(){if(S.role!=="anak"||!cloudReady())return;
+sbCall("get_progress",{p_id:ortuId()}).then(function(rows){var d=rows&&rows[0]&&rows[0].data;if(!d)return;var ch=false,msgs=[];
+if(d.hadiah&&d.hv&&d.hv>(S.hv||0)){S.hadiah=d.hadiah;S.hv=d.hv;ch=true;msgs.push("Daftar hadiah diperbarui orang tua 🎁")}
+S.cmdDone=S.cmdDone||[];
+(d.cmds||[]).slice().sort(function(a,b){return a.t-b.t}).forEach(function(c){if(S.cmdDone.indexOf(c.id)>=0)return;
+var real=c.v>0?c.v:-Math.min(-c.v,S.poin);if(real){S.poin+=real;logPoin(real,c.ket||"Dari orang tua");msgs.push((real>0?"+":"−")+Math.abs(real)+" poin dari orang tua")}
+S.cmdDone.push(c.id);ch=true});
+if(S.cmdDone.length>200)S.cmdDone=S.cmdDone.slice(-200);
+if(ch){save();upd();if(!$("hadiah").classList.contains("hide"))renderHadiah();if(msgs.length)toast(msgs.join(" · "))}}).catch(function(){})}
+function ortuSyncIn(){if(S.role!=="ortu"||!cloudReady())return;
+Promise.all([sbCall("get_progress",{p_id:S.kode}),sbCall("get_progress",{p_id:ortuId()})]).then(function(r){
+var pr=r[0]&&r[0][0]&&r[0][0].data,od=r[1]&&r[1][0]&&r[1][0].data;if(pr)RC=pr;var ch=false;
+if(od&&od.hadiah&&od.hv&&od.hv>(S.hv||0)){S.hadiah=od.hadiah;S.hv=od.hv;ch=true}
+else if(!(od&&od.hv)&&pr&&pr.hadiah&&!S.hv){S.hadiah=pr.hadiah;ch=true}
+if(ch)save();renderOrtu()}).catch(function(){})}
 function cloudSoon(){clearTimeout(cloudSoon.h);cloudSoon.h=setTimeout(function(){cloudPush()},1500)}
 function cloudPush(){if(S.role!=="anak"||!S.kirim||!cloudReady())return Promise.resolve(false);
-var d={nama:S.nama,sekolah:S.sekolah,poin:S.poin,riwayat:(S.riwayat||[]).slice(0,50),poinLog:(S.poinLog||[]).slice(0,50),sesi:(S.sesi||[]).slice(0,100)};
+var d={nama:S.nama,sekolah:S.sekolah,poin:S.poin,riwayat:(S.riwayat||[]).slice(0,50),poinLog:(S.poinLog||[]).slice(0,50),sesi:(S.sesi||[]).slice(0,100),hadiah:S.hadiah};
 return sbCall("save_progress",{p_id:S.kode,p_data:d}).then(function(){return true}).catch(function(){return false})}
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -1792,7 +1815,7 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 +'<div class="row" style="margin-top:8px"><input id="np1" type="password" inputmode="numeric" maxlength="4" placeholder="PIN baru 4 angka" style="width:150px"><input id="np2" type="password" inputmode="numeric" maxlength="4" placeholder="Ulangi PIN baru" style="width:150px"><button class="btn sun" id="btn-chgpin">Ubah PIN</button></div>'
 +'<p class="small" id="np-err" role="alert" style="color:var(--coral);margin-top:6px"></p></div>'
 
-+'<div class="card"><h3>Tambah poin</h3><p class="small">Saldo sekarang: '+S.poin+' poin</p><div class="row"><input id="adj" type="number" value="10" min="1" style="width:110px" aria-label="Jumlah poin ditambah"><button class="btn" id="plus">Tambah poin</button></div></div>'
++'<div class="card"><h3>Tambah poin</h3><p class="small">'+(S.role==="ortu"?"Saldo anak: "+(RC&&typeof RC.poin!=="undefined"?RC.poin:"–")+" poin (data terakhir). Perubahan dikirim ke HP anak.":"Saldo sekarang: "+S.poin+" poin")+'</p><div class="row"><input id="adj" type="number" value="10" min="1" style="width:110px" aria-label="Jumlah poin ditambah"><button class="btn" id="plus">Tambah poin</button></div></div>'
 +'<div class="card"><h3>Kurangi poin</h3><p class="small">Masukkan jumlah dan alasannya. Saldo tidak bisa kurang dari 0.</p><div class="row"><input id="sub" type="number" value="5" min="1" style="width:110px" aria-label="Jumlah poin dikurangi"><input id="subwhy" placeholder="Alasan, mis. tidak mengerjakan PR" style="flex:1;min-width:170px"></div><div class="row" style="margin-top:8px"><button class="btn danger" id="minus">Kurangi poin</button></div></div>'
 +'<div class="card"><h3>Daftar hadiah</h3>'+S.hadiah.map(function(r){return'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+esc(r.e)+' '+esc(r.n)+' · '+r.p+' poin</span><button class="btn ghost" data-d="'+r.id+'">Hapus</button></div>'}).join("")
 +'<h3 style="margin-top:14px">Tambah hadiah</h3><div class="row"><input id="ne" placeholder="🎁" maxlength="2" style="width:60px"><input id="nn" placeholder="Nama hadiah" style="flex:1"><input id="np" type="number" placeholder="Poin" min="1" style="width:90px"><button class="btn sun" id="add">Tambah hadiah</button></div></div>'
@@ -1815,18 +1838,22 @@ if(a!==b){$("np-err").textContent="Konfirmasi PIN baru tidak sama.";return}
 S.pin=hsh(a);save();toast("PIN orang tua berhasil diubah! 🔒");renderOrtu()};
 function logPoin(v,ket){S.poinLog.unshift({t:new Date().toLocaleDateString("id-ID",{day:"numeric",month:"short"}),v:v,ket:ket});if(S.poinLog.length>50)S.poinLog.length=50}
 $("plus").onclick=function(){var v=parseInt($("adj").value,10);if(!v||v<1){toast("Isi jumlah poin yang ditambahkan");return}
+if(S.role==="ortu"){if(!cloudReady()){toast("Isi token dulu di bagian Sinkron progress");return}sendCmd(v,"Ditambah orang tua").then(function(ok){toast(ok?"+"+v+" poin terkirim ke HP anak ✅":"Gagal mengirim, coba lagi")});return}
 S.poin+=v;logPoin(v,"Ditambah orang tua");save();upd();renderOrtu();toast("+"+v+" poin")};
 $("minus").onclick=function(){var v=parseInt($("sub").value,10);if(!v||v<1){toast("Isi jumlah poin yang dikurangi");return}
+if(S.role==="ortu"){if(!cloudReady()){toast("Isi token dulu di bagian Sinkron progress");return}var why2=$("subwhy").value.trim()||"Tanpa alasan";
+ask("Kurangi "+v+" poin dari anak? Alasan: "+why2,function(){sendCmd(-v,why2).then(function(ok){toast(ok?"−"+v+" poin terkirim ke HP anak ✅":"Gagal mengirim, coba lagi")})});return}
 if(S.poin<=0){toast("Saldo poin sudah 0");return}
 var why=$("subwhy").value.trim()||"Tanpa alasan",real=Math.min(v,S.poin);
 ask("Kurangi "+real+" poin? Alasan: "+why,function(){S.poin-=real;logPoin(-real,why);save();upd();renderOrtu();toast("−"+real+" poin")})};
-el.querySelectorAll("[data-d]").forEach(function(b){b.onclick=function(){S.hadiah=S.hadiah.filter(function(x){return x.id!=b.dataset.d});save();renderOrtu()}});
+el.querySelectorAll("[data-d]").forEach(function(b){b.onclick=function(){S.hadiah=S.hadiah.filter(function(x){return x.id!=b.dataset.d});hadiahChanged();renderOrtu()}});
 $("add").onclick=function(){var n=$("nn").value.trim(),p=parseInt($("np").value,10);
 if(!n||!p||p<1){toast("Isi nama hadiah dan jumlah poin");return}
-S.hadiah.push({id:Date.now(),e:$("ne").value.trim()||"🎁",n:n,p:p});save();renderOrtu();toast("Hadiah ditambahkan")};
-$("rst").onclick=function(){ask("Hapus semua poin, hadiah, dan riwayat?",function(){var pn=S.pin,kd=S.kode,kr=S.kirim;S=JSON.parse(JSON.stringify(DEF));S.pin=pn;S.kode=kd;S.kirim=kr;S.v=3;save();upd();renderOrtu()})};
-$("lock").onclick=function(){unlocked=false;renderOrtu()};
+S.hadiah.push({id:Date.now(),e:$("ne").value.trim()||"🎁",n:n,p:p});hadiahChanged();renderOrtu();toast("Hadiah ditambahkan")};
+$("rst").onclick=function(){ask("Hapus semua poin, hadiah, dan riwayat?",function(){var pn=S.pin,kd=S.kode,kr=S.kirim,ro=S.role,nm=S.nama,sc=S.sekolah;S=JSON.parse(JSON.stringify(DEF));S.pin=pn;S.kode=kd;S.kirim=kr;S.role=ro;S.nama=nm;S.sekolah=sc;S.v=3;hadiahChanged();upd();renderOrtu()})};
+$("lock").onclick=function(){unlocked=false;ortuSynced=false;renderOrtu()};
 if(S.role==="ortu"){var cdk=$("cl-msg").parentNode;el.insertBefore(cdk,el.firstChild);setTimeout(function(){if(cloudReady()&&$("cl-lihat"))$("cl-lihat").click()},0)}
+if(S.role==="ortu"&&!ortuSynced){ortuSynced=true;ortuSyncIn()}
 function clMsg(t){$("cl-msg").textContent=t}
 $("cl-kode").onchange=function(){S.kode=this.value.trim();syncKirim();save();if(S.kirim)cloudPush()};
 $("cl-out").onclick=function(){ask("Ganti role / logout dari device ini? Poin dan hadiah tetap tersimpan.",doLogout)};
@@ -1834,7 +1861,7 @@ if($("cl-now"))$("cl-now").onclick=function(){S.kode=$("cl-kode").value.trim();s
 var k=S.kirim;S.kirim=true;clMsg("Mengirim…");cloudPush().then(function(ok){S.kirim=k;clMsg(ok?"Berhasil terkirim ✅":"Gagal mengirim. Cek koneksi dan pengaturan Supabase.")})};
 if($("cl-lihat"))$("cl-lihat").onclick=function(){var kd=$("cl-kode").value.trim();S.kode=kd;save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
 clMsg("Mengambil data…");sbCall("get_progress",{p_id:kd}).then(function(rows){var r=rows&&rows[0];if(!r){clMsg("Belum ada data untuk token ini.");$("cl-view").innerHTML="";return}
-var d=r.data||{},fm=function(t){try{return new Date(t).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}};
+var d=r.data||{};RC=d;var fm=function(t){try{return new Date(t).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}};
 clMsg("Data terakhir diperbarui: "+fm(r.updated_at));
 var ss=(d.sesi||[]).slice(0,10),rw=(d.riwayat||[]).slice(0,10);
 $("cl-view").innerHTML='<h3 style="margin-top:12px">'+esc(d.nama||"-")+(d.sekolah?" · "+esc(d.sekolah):"")+'</h3><p class="big" style="font-size:22px">'+esc(d.poin)+' poin</p>'
@@ -1848,7 +1875,7 @@ if(Q&&Q.i<Q.qs.length&&t!="belajar"){
 ask("Keluar dari sesi latihan ini dan membuka menu "+(t=="hadiah"?"Hadiah":"Orang Tua")+"?",function(){Q=null;tab(t)});
 return;
 }
-if(t!="ortu")unlocked=false;
+if(t!="ortu"){unlocked=false;ortuSynced=false}
 $("landing").classList.add("hide");
 $("nav").classList.remove("hide");
 $("pts").classList.remove("hide");
@@ -1865,6 +1892,7 @@ return;
 Q=null;if(needLogin()){renderLanding(false)}else{tab("belajar")}};
 upd();
 if(S.kirim)cloudSoon();
+setTimeout(cloudPull,800);setInterval(cloudPull,45000);document.addEventListener("visibilitychange",function(){if(!document.hidden)cloudPull()});
 if(needLogin()){renderLanding(false)}else{renderBelajar()}
 </script>
 </body>
