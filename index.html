@@ -125,9 +125,29 @@ var pr=r[0]&&r[0][0]&&r[0][0].data,od=r[1]&&r[1][0]&&r[1][0].data;if(pr)RC=pr;va
 if(od&&od.hadiah&&od.hv&&od.hv>(S.hv||0)){S.hadiah=od.hadiah;S.hv=od.hv;ch=true}
 else if(!(od&&od.hv)&&pr&&pr.hadiah&&!S.hv){S.hadiah=pr.hadiah;ch=true}
 if(ch)save();renderOrtu()}).catch(function(){})}
+function logSesi(done){if(!Q||Q.logged)return;Q.logged=1;S.sesi=S.sesi||[];
+S.sesi.unshift({t:new Date().toISOString(),m:(subj(Q.k)||{}).n||"Latihan",ok:Q.ok,n:Q.qs.length,a:(Q.res||[]).length,p:Q.earn,h:Q.hints,d:done?1:0,res:Q.res||[]});
+for(var i=20;i<S.sesi.length;i++)delete S.sesi[i].res;if(S.sesi.length>100)S.sesi.length=100;save()}
+function renderReview(box,d){
+var fm=function(t){try{return new Date(t).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}};
+var ss=d.sesi||[],ag={},wr={},rw=(d.riwayat||[]).slice(0,10);
+ss.forEach(function(x){var o=ag[x.m]||(ag[x.m]={s:0,ok:0,n:0});o.s++;o.ok+=x.ok;o.n+=(typeof x.a==="number"?x.a:x.n);
+(x.res||[]).forEach(function(r){if(!r.ok){var k=x.m+"|"+r.q,e=wr[k]||(wr[k]={m:x.m,q:r.q,a:r.a,x:r.x,c:0});e.c++}})});
+var sm=Object.keys(ag).map(function(m){var o=ag[m],pc=o.n?Math.round(o.ok/o.n*100):0;return'<div class="small" style="margin:6px 0"><b>'+esc(m)+'</b> · '+o.s+' sesi · '+o.ok+'/'+o.n+' benar tanpa kunci ('+pc+'%)</div>'}).join("");
+var wl=Object.keys(wr).map(function(k){return wr[k]}).sort(function(a,b){return b.c-a.c}).slice(0,10);
+var wh=wl.length?wl.map(function(e){return'<div style="margin:8px 0"><div style="font-weight:700">'+esc(e.q)+'</div><div class="small">'+esc(e.m)+' · salah '+e.c+'x · Jawaban tepat: <b>'+esc(e.a)+'</b></div>'+(e.x?'<div class="small">'+esc(e.x)+'</div>':'')+'</div>'}).join(""):'<p class="small">Belum ada soal yang salah pada sesi yang detailnya tersimpan.</p>';
+var sh=ss.slice(0,20).map(function(x){var an=(typeof x.a==="number"?x.a:x.n);
+var body=(x.res&&x.res.length)?x.res.map(function(r){return'<div class="'+(r.ok?"rv-ok":"rv-no")+'" style="margin:8px 0;padding:8px 10px;border-radius:10px;background:'+(r.ok?"rgba(80,200,140,.12)":"rgba(255,99,99,.14)")+'"><div style="font-weight:700">'+(r.ok?"✅":"❌")+" "+esc(r.q)+'</div><div class="small">Jawaban anak: '+esc(r.y)+(r.ok?"":" · Jawaban tepat: <b>"+esc(r.a)+"</b>")+'</div>'+(!r.ok&&r.x?'<div class="small">'+esc(r.x)+'</div>':"")+(r.kk?'<div class="small">🔑 memakai kunci jawaban (tanpa poin)</div>':"")+(r.sk?'<div class="small">↩️ sempat dilewati dulu</div>':"")+'</div>'}).join(""):'<p class="small">Detail soal tidak tersimpan untuk sesi ini.</p>';
+return'<details style="margin:8px 0"><summary style="cursor:pointer;font-weight:700">'+esc(fm(x.t))+' · '+esc(x.m)+' · '+esc(x.ok)+'/'+esc(an)+' benar · +'+esc(x.p)+' poin'+(x.d===0?" · belum selesai":"")+'</summary>'+body+'</details>'}).join("");
+box.innerHTML='<h3 style="margin-top:12px">'+esc(d.nama||"-")+(d.sekolah?" · "+esc(d.sekolah):"")+'</h3><p class="big" style="font-size:22px">'+esc(d.poin)+' poin</p>'
++'<h3 style="margin-top:10px">Ringkasan per mata pelajaran</h3>'+(sm||'<p class="small">Belum ada sesi tercatat.</p>')
++'<h3 style="margin-top:10px">Soal yang perlu diulang</h3>'+wh
++'<h3 style="margin-top:10px">Hasil tiap sesi (review soal)</h3><label class="small" style="display:flex;gap:8px;align-items:center;margin:6px 0"><input type="checkbox" id="rv-f"> Tampilkan hanya soal yang salah</label>'+(sh||'<p class="small">Belum ada sesi tercatat.</p>')
++'<h3 style="margin-top:10px">Hadiah yang ditukar</h3>'+(rw.length?rw.map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.n)+' · '+esc(x.p)+' poin</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>');
+var f=box.querySelector("#rv-f");if(f)f.onchange=function(){box.querySelectorAll(".rv-ok").forEach(function(e){e.style.display=f.checked?"none":""})}}
 function cloudSoon(){clearTimeout(cloudSoon.h);cloudSoon.h=setTimeout(function(){cloudPush()},1500)}
 function cloudPush(){if(S.role!=="anak"||!S.kirim||!cloudReady())return Promise.resolve(false);
-var d={nama:S.nama,sekolah:S.sekolah,poin:S.poin,riwayat:(S.riwayat||[]).slice(0,50),poinLog:(S.poinLog||[]).slice(0,50),sesi:(S.sesi||[]).slice(0,100),hadiah:S.hadiah};
+var d={nama:S.nama,sekolah:S.sekolah,poin:S.poin,riwayat:(S.riwayat||[]).slice(0,50),poinLog:(S.poinLog||[]).slice(0,50),sesi:(S.sesi||[]).slice(0,100).map(function(x,i){if(i<20)return x;var y={};for(var k in x)if(k!=="res")y[k]=x[k];return y}),hadiah:S.hadiah};
 return sbCall("save_progress",{p_id:S.kode,p_data:d}).then(function(){return true}).catch(function(){return false})}
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -1684,10 +1704,10 @@ if($("btn-logout"))$("btn-logout").onclick=function(){ask("Logout dari akun "+S.
 el.querySelectorAll("[data-k]").forEach(function(b){b.onclick=function(){Pk.k=b.dataset.k;Pk.l=0;Pk.n=10;
 var sj=subj(Pk.k)||{};
 el.innerHTML='<div class="card" style="text-align:center;padding:28px 18px"><div style="font-size:56px;line-height:1">'+(sj.e||"📚")+'</div><h2 style="margin:8px 0">'+esc(sj.n||"Latihan")+'</h2><p style="font-size:20px;font-weight:700;line-height:1.5;max-width:460px;margin:12px auto 20px">Percaya pada diri sendiri, jangan berbuat curang, jangan lupa ucap Bismillah 🤲</p><div class="row" style="justify-content:center"><button class="btn sun" id="pre-go">Bismillah, Mulai 🚀</button><button class="btn ghost" id="pre-back">Kembali</button></div></div>';
-$("pre-go").onclick=function(){Q={k:Pk.k,qs:makeQs(Pk.k,0,25),i:0,ok:0,earn:0,hints:0,wrong:[]};renderBelajar()};
+$("pre-go").onclick=function(){Q={k:Pk.k,qs:makeQs(Pk.k,0,25),i:0,ok:0,earn:0,hints:0,wrong:[],res:[]};renderBelajar()};
 $("pre-back").onclick=function(){renderBelajar()}}});return}
 if(Q.i>=Q.qs.length){
-if(!Q.logged){Q.logged=1;S.sesi=S.sesi||[];S.sesi.unshift({t:new Date().toISOString(),m:(subj(Q.k)||{}).n||"Latihan",ok:Q.ok,n:Q.qs.length,p:Q.earn,h:Q.hints});if(S.sesi.length>100)S.sesi.length=100;save()}
+logSesi(true);
 var rev=Q.wrong.length?'<div class="card"><h3>Soal yang perlu diulang 💪</h3><p class="small">Bukan untuk ditakuti, tapi untuk dilatih. Baca pembahasannya, lalu coba lagi.</p>'+Q.wrong.map(function(w){return'<div style="margin:12px 0"><strong>'+esc(w.q)+'</strong><div class="small">Jawaban tepat: '+esc(w.a)+'</div>'+(w.x?'<div class="small">'+esc(w.x)+'</div>':'')+'</div>'}).join("")+'</div>':"";
 el.innerHTML='<div class="card" style="text-align:center"><div style="font-size:64px">'+(Q.ok/Q.qs.length>=.8?"🏆":"👏")+'</div><h2>Selesai! '+Q.ok+' dari '+Q.qs.length+' benar tanpa kunci jawaban</h2><p class="big" style="font-size:28px">+'+Q.earn+' poin'+(Q.hints?" − "+Q.hints*HINT+" (kunci jawaban)":"")+'</p><div class="row" style="justify-content:center"><button class="btn sun" id="lagi">Belajar lagi</button><button class="btn ghost" id="ke">Lihat hadiah</button></div></div>'+rev;
 $("lagi").onclick=function(){Q=null;renderBelajar()};
@@ -1706,7 +1726,7 @@ el.innerHTML='<div class="card">'
 +(Q.qs.length-Q.i>1?'<button class="btn" id="skip">Lewati dulu ⏭</button>':'')
 +'<button class="btn ghost" id="btn-exit-bottom" style="font-size:13px">Ganti Mapel</button></div>'
 +'<p class="small" id="kmsg" role="status"></p><div id="fb"></div></div>';
-function quitSession(){ask("Keluar dari sesi ini dan kembali memilih mapel? Poin yang sudah kamu dapatkan tetap tersimpan.",function(){Q=null;renderBelajar();toast("Kembali ke pilihan mapel")})}
+function quitSession(){ask("Keluar dari sesi ini dan kembali memilih mapel? Poin yang sudah kamu dapatkan tetap tersimpan.",function(){if(Q&&(Q.res||[]).length)logSesi(false);Q=null;renderBelajar();toast("Kembali ke pilihan mapel")})}
 $("btn-exit").onclick=quitSession;
 $("btn-exit-bottom").onclick=quitSession;
 function showKey(){el.querySelectorAll(".opts button").forEach(function(x){if(x.dataset.v===c.a)x.classList.add("ok")})}
@@ -1717,6 +1737,7 @@ if(S.poin<HINT){toast("Poin belum cukup untuk membuka kunci jawaban");return}
 S.poin-=HINT;Q.hints++;used=true;c.kk=1;save();upd();showKey();$("kmsg").textContent="Kunci jawaban dibuka. Soal ini tidak menambah poin."};
 el.querySelectorAll(".opts button").forEach(function(b){b.onclick=function(){if(locked)return;locked=true;
 var good=b.dataset.v===c.a;
+Q.res=Q.res||[];Q.res.push({q:String(c.q).slice(0,160),y:String(b.dataset.v).slice(0,80),a:String(c.a).slice(0,80),ok:good?1:0,kk:used?1:0,sk:c.sk?1:0,x:c.x?String(c.x).slice(0,200):""});
 if(good){b.classList.add("ok");if(!used){var p=PTS[c.l||2];Q.ok++;Q.earn+=p;S.poin+=p;save();upd()}}
 else{b.classList.add("no");showKey();Q.wrong.push(c)}
 var expl=c.x?esc(c.x):(good?"":"Ingat jawaban yang tepat ini, lalu coba soal serupa berikutnya.");
@@ -1822,7 +1843,7 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 +'<div class="card"><h3>Riwayat penukaran</h3>'+(S.riwayat.length?S.riwayat.slice(0,15).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.e)+' '+esc(x.n)+' (−'+x.p+')</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>')+'</div>'
 +'<div class="card"><h3>Sinkron progress (cloud)</h3><p class="small">Role device ini: <b>'+(S.role==="ortu"?"Orang Tua":"Anak")+'</b>. '+(S.role==="ortu"?"Masukkan token yang sama dengan device anak, lalu lihat progress anak.":"Progress dikirim otomatis ke cloud selama token terisi (min. 6 karakter).")+'</p>'
 +'<div class="row"><input id="cl-kode" placeholder="isikan token" maxlength="40" autocomplete="off" style="flex:1;min-width:170px" value="'+esc(S.kode||"")+'"></div>'
-+'<div class="row" style="margin-top:8px">'+(S.role==="ortu"?'<button class="btn" id="cl-lihat">Lihat progress anak</button>':'<button class="btn sun" id="cl-now">Kirim sekarang</button>')+'<button class="btn ghost" id="cl-out">Ganti Role / Logout</button></div>'
++'<div class="row" style="margin-top:8px">'+(S.role==="ortu"?'<button class="btn" id="cl-lihat">Lihat hasil pekerjaan anak</button>':'<button class="btn sun" id="cl-now">Kirim sekarang</button><button class="btn" id="cl-local">Lihat hasil pekerjaan</button>')+'<button class="btn ghost" id="cl-out">Ganti Role / Logout</button></div>'
 +'<p class="small" id="cl-msg" role="status">'+(SB_URL&&SB_KEY?"":"Cloud belum disetel: isi SB_URL dan SB_KEY di index.html.")+'</p><div id="cl-view"></div></div>'
 +'<div class="card"><h3>Riwayat poin</h3>'+(S.poinLog.length?S.poinLog.slice(0,20).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+(x.v>0?"+":"−")+Math.abs(x.v)+' poin · '+esc(x.ket)+'</div>'}).join(""):'<p class="small">Belum ada penambahan atau pengurangan poin manual.</p>')+'</div>'
 +'<div class="card row"><button class="btn" id="lock">Kunci sekarang</button><button class="btn ghost" id="rst">Reset semua data</button></div>';
@@ -1857,6 +1878,7 @@ if(S.role==="ortu"&&!ortuSynced){ortuSynced=true;ortuSyncIn()}
 function clMsg(t){$("cl-msg").textContent=t}
 $("cl-kode").onchange=function(){S.kode=this.value.trim();syncKirim();save();if(S.kirim)cloudPush()};
 $("cl-out").onclick=function(){ask("Ganti role / logout dari device ini? Poin dan hadiah tetap tersimpan.",doLogout)};
+if($("cl-local"))$("cl-local").onclick=function(){renderReview($("cl-view"),{nama:S.nama,sekolah:S.sekolah,poin:S.poin,sesi:S.sesi,riwayat:S.riwayat})};
 if($("cl-now"))$("cl-now").onclick=function(){S.kode=$("cl-kode").value.trim();save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
 var k=S.kirim;S.kirim=true;clMsg("Mengirim…");cloudPush().then(function(ok){S.kirim=k;clMsg(ok?"Berhasil terkirim ✅":"Gagal mengirim. Cek koneksi dan pengaturan Supabase.")})};
 if($("cl-lihat"))$("cl-lihat").onclick=function(){var kd=$("cl-kode").value.trim();S.kode=kd;save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
@@ -1864,9 +1886,7 @@ clMsg("Mengambil data…");sbCall("get_progress",{p_id:kd}).then(function(rows){
 var d=r.data||{};RC=d;var fm=function(t){try{return new Date(t).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}};
 clMsg("Data terakhir diperbarui: "+fm(r.updated_at));
 var ss=(d.sesi||[]).slice(0,10),rw=(d.riwayat||[]).slice(0,10);
-$("cl-view").innerHTML='<h3 style="margin-top:12px">'+esc(d.nama||"-")+(d.sekolah?" · "+esc(d.sekolah):"")+'</h3><p class="big" style="font-size:22px">'+esc(d.poin)+' poin</p>'
-+'<h3 style="margin-top:10px">Sesi latihan terakhir</h3>'+(ss.length?ss.map(function(x){return'<div class="small" style="margin:6px 0">'+esc(fm(x.t))+' · '+esc(x.m)+' · '+esc(x.ok)+'/'+esc(x.n)+' benar · +'+esc(x.p)+' poin'+(x.h?' · kunci jawaban '+esc(x.h)+'x':'')+'</div>'}).join(""):'<p class="small">Belum ada sesi tercatat.</p>')
-+'<h3 style="margin-top:10px">Hadiah yang ditukar</h3>'+(rw.length?rw.map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.n)+' · '+esc(x.p)+' poin</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>')}).catch(function(){clMsg("Gagal mengambil data. Cek koneksi dan pengaturan Supabase.")})};
+renderReview($("cl-view"),d);}).catch(function(){clMsg("Gagal mengambil data. Cek koneksi dan pengaturan Supabase.")})};
 }
 
 function upd(){$("pts").textContent=S.poin+" poin";$("hi").textContent=S.role==="ortu"?"Orang Tua":(S.nama?("Halo, "+S.nama+"!"):"Arena Juara")}
