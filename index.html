@@ -136,9 +136,14 @@ ss.forEach(function(x){var o=ag[x.m]||(ag[x.m]={s:0,ok:0,n:0});o.s++;o.ok+=x.ok;
 var sm=Object.keys(ag).map(function(m){var o=ag[m],pc=o.n?Math.round(o.ok/o.n*100):0;return'<div class="small" style="margin:6px 0"><b>'+esc(m)+'</b> · '+o.s+' sesi · '+o.ok+'/'+o.n+' benar tanpa kunci ('+pc+'%)</div>'}).join("");
 var wl=Object.keys(wr).map(function(k){return wr[k]}).sort(function(a,b){return b.c-a.c}).slice(0,10);
 var wh=wl.length?wl.map(function(e){return'<div style="margin:8px 0"><div style="font-weight:700">'+esc(e.q)+'</div><div class="small">'+esc(e.m)+' · salah '+e.c+'x · Jawaban tepat: <b>'+esc(e.a)+'</b></div>'+(e.x?'<div class="small">'+esc(e.x)+'</div>':'')+'</div>'}).join(""):'<p class="small">Belum ada soal yang salah pada sesi yang detailnya tersimpan.</p>';
-var sh=ss.slice(0,20).map(function(x){var an=(typeof x.a==="number"?x.a:x.n);
-var body=(x.res&&x.res.length)?x.res.map(function(r){return'<div class="'+(r.ok?"rv-ok":"rv-no")+'" style="margin:8px 0;padding:8px 10px;border-radius:10px;background:'+(r.ok?"rgba(80,200,140,.12)":"rgba(255,99,99,.14)")+'"><div style="font-weight:700">'+(r.ok?"✅":"❌")+" "+esc(r.q)+'</div><div class="small">Jawaban anak: '+esc(r.y)+(r.ok?"":" · Jawaban tepat: <b>"+esc(r.a)+"</b>")+'</div>'+(!r.ok&&r.x?'<div class="small">'+esc(r.x)+'</div>':"")+(r.kk?'<div class="small">🔑 memakai kunci jawaban (tanpa poin)</div>':"")+(r.sk?'<div class="small">↩️ sempat dilewati dulu</div>':"")+'</div>'}).join(""):'<p class="small">Detail soal tidak tersimpan untuk sesi ini.</p>';
-return'<details style="margin:8px 0"><summary style="cursor:pointer;font-weight:700">'+esc(fm(x.t))+' · '+esc(x.m)+' · '+esc(x.ok)+'/'+esc(an)+' benar · +'+esc(x.p)+' poin'+(x.d===0?" · belum selesai":"")+'</summary>'+body+'</details>'}).join("");
+var sh=ss.slice(0,20).map(function(x,si){var an=(typeof x.a==="number"?x.a:x.n);
+var body=(x.res&&x.res.length)?x.res.map(function(r,ri){
+var opts=(r.o&&r.o.length)?'<div style="margin:8px 0;display:flex;flex-direction:column;gap:6px">'+r.o.map(function(o){var isA=o===r.a,isY=o===r.y;
+var st=isA?"background:rgba(80,200,140,.22);border:1px solid rgba(80,200,140,.7)":(isY?"background:rgba(255,99,99,.22);border:1px solid rgba(255,99,99,.7)":"background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)");
+return'<div style="padding:7px 10px;border-radius:10px;font-size:14px;'+st+'">'+(isA?"✅ ":(isY?"❌ ":""))+esc(o)+(isY?' <span class="small">(pilihan anak)</span>':"")+(isA&&!isY?' <span class="small">(jawaban tepat)</span>':"")+'</div>'}).join("")+'</div>'
+:'<div class="small">Jawaban anak: '+esc(r.y)+(r.ok?"":" · Jawaban tepat: <b>"+esc(r.a)+"</b>")+'</div>';
+return'<div class="'+(r.ok?"rv-ok":"rv-no")+'" style="margin:10px 0;padding:10px 12px;border-radius:12px;background:'+(r.ok?"rgba(80,200,140,.08)":"rgba(255,99,99,.10)")+'"><div class="small" style="font-weight:700">Soal '+(ri+1)+' · '+(r.ok?"✅ Benar":"❌ Salah")+(r.kk?" · 🔑 pakai kunci jawaban":"")+(r.sk?" · ↩️ sempat dilewati":"")+'</div><div style="font-weight:700;margin:4px 0">'+esc(r.q)+'</div>'+opts+(r.x?'<div class="small" style="margin-top:6px">💡 '+esc(r.x)+'</div>':"")+'</div>'}).join(""):'<p class="small">Detail soal tidak tersimpan untuk sesi ini (sesi dikerjakan sebelum fitur review, atau HP anak belum memakai versi terbaru).</p>';
+return'<details'+(si===0&&x.res&&x.res.length?" open":"")+' style="margin:8px 0"><summary style="cursor:pointer;font-weight:700">'+esc(fm(x.t))+' · '+esc(x.m)+' · '+esc(x.ok)+'/'+esc(an)+' benar · +'+esc(x.p)+' poin'+(x.d===0?" · belum selesai":"")+'</summary>'+body+'</details>'}).join("");
 box.innerHTML='<h3 style="margin-top:12px">'+esc(d.nama||"-")+(d.sekolah?" · "+esc(d.sekolah):"")+'</h3><p class="big" style="font-size:22px">'+esc(d.poin)+' poin</p>'
 +'<h3 style="margin-top:10px">Ringkasan per mata pelajaran</h3>'+(sm||'<p class="small">Belum ada sesi tercatat.</p>')
 +'<h3 style="margin-top:10px">Soal yang perlu diulang</h3>'+wh
@@ -1737,7 +1742,7 @@ if(S.poin<HINT){toast("Poin belum cukup untuk membuka kunci jawaban");return}
 S.poin-=HINT;Q.hints++;used=true;c.kk=1;save();upd();showKey();$("kmsg").textContent="Kunci jawaban dibuka. Soal ini tidak menambah poin."};
 el.querySelectorAll(".opts button").forEach(function(b){b.onclick=function(){if(locked)return;locked=true;
 var good=b.dataset.v===c.a;
-Q.res=Q.res||[];Q.res.push({q:String(c.q).slice(0,160),y:String(b.dataset.v).slice(0,80),a:String(c.a).slice(0,80),ok:good?1:0,kk:used?1:0,sk:c.sk?1:0,x:c.x?String(c.x).slice(0,200):""});
+Q.res=Q.res||[];Q.res.push({o:(c.o||[]).map(function(x){return String(x).slice(0,80)}),q:String(c.q).slice(0,160),y:String(b.dataset.v).slice(0,80),a:String(c.a).slice(0,80),ok:good?1:0,kk:used?1:0,sk:c.sk?1:0,x:c.x?String(c.x).slice(0,200):""});
 if(good){b.classList.add("ok");if(!used){var p=PTS[c.l||2];Q.ok++;Q.earn+=p;S.poin+=p;save();upd()}}
 else{b.classList.add("no");showKey();Q.wrong.push(c)}
 var expl=c.x?esc(c.x):(good?"":"Ingat jawaban yang tepat ini, lalu coba soal serupa berikutnya.");
