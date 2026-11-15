@@ -77,15 +77,15 @@ input{font:500 16px Nunito,sans-serif;padding:10px;border-radius:12px;border:2px
 /* === SINKRON CLOUD (Supabase) — isi dua nilai ini setelah membuat project Supabase === */
 var SB_URL="https://txghgqydhdohgaiqtzbx.supabase.co",SB_KEY="sb_publishable_FPWxtLDeb3bK8xJrsappRg_WENgqXFj";
 var DEF={nama:"",sekolah:"",poin:100,pin:"",hadiah:[
-{id:1,e:"🎁",n:"Uang Tunai Rp. 50.000",p:750},
-{id:2,e:"🎁",n:"Kuota 10 GB",p:1000},
-{id:3,e:"🎁",n:"Voucher Yogya / Indomaret Rp. 100.000",p:1000},
-{id:4,e:"🎁",n:"Voucher Decathlon Rp. 150.000",p:1250},
-{id:5,e:"🎁",n:"Strap Gitar Planet Waves",p:1500},
-{id:6,e:"🎁",n:"Nonton Bioskop",p:1500},
-{id:7,e:"🎁",n:"Makan di Marugame Udon",p:2000},
-{id:8,e:"🎁",n:"Jersey Kelme",p:3500},
-{id:9,e:"🎁",n:"Parfum Mykonos / HMNS",p:4000}],riwayat:[],poinLog:[]};
+{id:1,e:"🎁",n:"Uang Tunai Rp. 50.000",p:2200},
+{id:2,e:"🎁",n:"Kuota 10 GB",p:3300},
+{id:3,e:"🎁",n:"Voucher Yogya / Indomaret Rp. 100.000",p:4100},
+{id:4,e:"🎁",n:"Voucher Decathlon Rp. 150.000",p:5500},
+{id:5,e:"🎁",n:"Strap Gitar Planet Waves",p:4900},
+{id:6,e:"🎁",n:"Nonton Bioskop",p:6300},
+{id:7,e:"🎁",n:"Makan di Marugame Udon",p:6800},
+{id:8,e:"🎁",n:"Jersey Kelme",p:13600},
+{id:9,e:"🎁",n:"Parfum Mykonos / HMNS",p:18000}],riwayat:[],poinLog:[]};
 DEF.pin=hsh("2871");
 var S;
 try{S=JSON.parse(localStorage.getItem("pb-state"))}catch(e){S=null}
@@ -93,6 +93,9 @@ if(!S||!S.hadiah)S=JSON.parse(JSON.stringify(DEF));
 if(!S.pin)S.pin=DEF.pin;
 if(!S.v||S.v<2){S.hadiah=JSON.parse(JSON.stringify(DEF.hadiah));S.pin=DEF.pin;S.v=2}
 if(S.v<3){S.poin=100;S.v=3;save()}
+if(S.v<4){var NP4={"Uang Tunai Rp. 50.000": 1450, "Kuota 10 GB": 2900, "Voucher Yogya / Indomaret Rp. 100.000": 2900, "Voucher Decathlon Rp. 150.000": 4350, "Strap Gitar Planet Waves": 4350, "Nonton Bioskop": 4350, "Makan di Marugame Udon": 5800, "Jersey Kelme": 10150, "Parfum Mykonos / HMNS": 11600},ch4=false;S.hadiah.forEach(function(h){if(NP4[h.n]&&h.p!==NP4[h.n]){h.p=NP4[h.n];ch4=true}});S.v=4;if(ch4)S.hv=Date.now();save();if(ch4)setTimeout(function(){if(typeof hadiahChanged==="function")hadiahChanged()},1500)}
+if(S.v<5){var NP5={"Uang Tunai Rp. 50.000": [1450, 5800], "Kuota 10 GB": [2900, 11600], "Voucher Yogya / Indomaret Rp. 100.000": [2900, 11600], "Voucher Decathlon Rp. 150.000": [4350, 17400], "Strap Gitar Planet Waves": [4350, 17400], "Nonton Bioskop": [4350, 17400], "Makan di Marugame Udon": [5800, 23200], "Jersey Kelme": [10150, 40600], "Parfum Mykonos / HMNS": [11600, 46400]},ch5=false;S.hadiah.forEach(function(h){var m=NP5[h.n];if(m&&h.p===m[0]){h.p=m[1];ch5=true}});S.v=5;if(ch5)S.hv=Date.now();save();if(ch5)setTimeout(function(){if(typeof hadiahChanged==="function")hadiahChanged()},1500)}
+if(S.v<6){var NP6={"Uang Tunai Rp. 50.000": [5800, 2200], "Kuota 10 GB": [11600, 3300], "Voucher Yogya / Indomaret Rp. 100.000": [11600, 4100], "Voucher Decathlon Rp. 150.000": [17400, 5500], "Strap Gitar Planet Waves": [17400, 4900], "Nonton Bioskop": [17400, 6300], "Makan di Marugame Udon": [23200, 6800], "Jersey Kelme": [40600, 13600], "Parfum Mykonos / HMNS": [46400, 18000]},ch6=false;S.hadiah.forEach(function(h){var m=NP6[h.n];if(m&&h.p===m[0]){h.p=m[1];ch6=true}});S.seen=S.seen||{};for(var k6 in (S.used||{}))(S.used[k6]||[]).forEach(function(t){S.seen[qh(t)]=1});S.v=6;if(ch6)S.hv=Date.now();save();if(ch6)setTimeout(function(){if(typeof hadiahChanged==="function")hadiahChanged()},1500)}
 if(typeof S.sekolah==="undefined")S.sekolah="";
 if(!S.poinLog)S.poinLog=[];
 if(!S.used)S.used={};
@@ -102,6 +105,7 @@ function cloudReady(){return !!(SB_URL&&SB_KEY&&S&&S.kode&&S.kode.length>=6)}
 function syncKirim(){S.kirim=(S.role==="anak")&&!!S.kode&&S.kode.length>=6}
 function needLogin(){return !S.role||(S.role==="anak"&&(!S.nama||!S.sekolah))}
 function doLogout(){Q=null;unlocked=false;ortuSynced=false;RC=null;S.nama="";S.sekolah="";S.role="";S.kirim=false;save();upd();renderLanding(false);toast("Berhasil logout")}
+function qh(t){var h=5381,i;t=String(t);for(i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return (h>>>0).toString(36)}
 function logPoin(v,ket){S.poinLog=S.poinLog||[];S.poinLog.unshift({t:new Date().toLocaleDateString("id-ID",{day:"numeric",month:"short"}),v:v,ket:ket});if(S.poinLog.length>50)S.poinLog.length=50}
 var RC=null,ortuSynced=false;
 function ortuId(){return S.kode+"#ortu"}
@@ -142,7 +146,7 @@ var opts=(r.o&&r.o.length)?'<div style="margin:8px 0;display:flex;flex-direction
 var st=isA?"background:rgba(80,200,140,.22);border:1px solid rgba(80,200,140,.7)":(isY?"background:rgba(255,99,99,.22);border:1px solid rgba(255,99,99,.7)":"background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)");
 return'<div style="padding:7px 10px;border-radius:10px;font-size:14px;'+st+'">'+(isA?"✅ ":(isY?"❌ ":""))+esc(o)+(isY?' <span class="small">(pilihan anak)</span>':"")+(isA&&!isY?' <span class="small">(jawaban tepat)</span>':"")+'</div>'}).join("")+'</div>'
 :'<div class="small">Jawaban anak: '+esc(r.y)+(r.ok?"":" · Jawaban tepat: <b>"+esc(r.a)+"</b>")+'</div>';
-return'<div class="'+(r.ok?"rv-ok":"rv-no")+'" style="margin:10px 0;padding:10px 12px;border-radius:12px;background:'+(r.ok?"rgba(80,200,140,.08)":"rgba(255,99,99,.10)")+'"><div class="small" style="font-weight:700">Soal '+(ri+1)+' · '+(r.ok?"✅ Benar":"❌ Salah")+(r.kk?" · 🔑 pakai kunci jawaban":"")+(r.sk?" · ↩️ sempat dilewati":"")+'</div><div style="font-weight:700;margin:4px 0">'+esc(r.q)+'</div>'+opts+(r.x?'<div class="small" style="margin-top:6px">💡 '+esc(r.x)+'</div>':"")+'</div>'}).join(""):'<p class="small">Detail soal tidak tersimpan untuk sesi ini (sesi dikerjakan sebelum fitur review, atau HP anak belum memakai versi terbaru).</p>';
+return'<div class="'+(r.ok?"rv-ok":"rv-no")+'" style="margin:10px 0;padding:10px 12px;border-radius:12px;background:'+(r.ok?"rgba(80,200,140,.08)":"rgba(255,99,99,.10)")+'"><div class="small" style="font-weight:700">Soal '+(ri+1)+' · '+(r.ok?"✅ Benar":"❌ Salah")+(r.kk?" · 🔑 pakai kunci jawaban":"")+(r.sk?" · ↩️ sempat dilewati":"")+(r.rp?" · 🔁 soal ulang (poin separuh)":"")+'</div><div style="font-weight:700;margin:4px 0">'+esc(r.q)+'</div>'+opts+(r.x?'<div class="small" style="margin-top:6px">💡 '+esc(r.x)+'</div>':"")+'</div>'}).join(""):'<p class="small">Detail soal tidak tersimpan untuk sesi ini (sesi dikerjakan sebelum fitur review, atau HP anak belum memakai versi terbaru).</p>';
 return'<details'+(si===0&&x.res&&x.res.length?" open":"")+' style="margin:8px 0"><summary style="cursor:pointer;font-weight:700">'+esc(fm(x.t))+' · '+esc(x.m)+' · '+esc(x.ok)+'/'+esc(an)+' benar · +'+esc(x.p)+' poin'+(x.d===0?" · belum selesai":"")+'</summary>'+body+'</details>'}).join("");
 box.innerHTML='<h3 style="margin-top:12px">'+esc(d.nama||"-")+(d.sekolah?" · "+esc(d.sekolah):"")+'</h3><p class="big" style="font-size:22px">'+esc(d.poin)+' poin</p>'
 +'<h3 style="margin-top:10px">Ringkasan per mata pelajaran</h3>'+(sm||'<p class="small">Belum ada sesi tercatat.</p>')
@@ -1691,7 +1695,7 @@ if(pool.length<n){used=[];usedSet={};seen={};pool=[];(BANK[k]||[]).forEach(funct
 var pick=shuffle(pool).slice(0,n);
 pick.sort(function(a,b){return (a[3]||2)-(b[3]||2)});
 S.used[k]=used.concat(pick.map(function(x){return x[0]}));save();
-return pick.map(function(x){return{q:x[0],a:x[1],o:shuffle(x[2].slice()),l:x[3],x:x[4]||""}})}
+S.seen=S.seen||{};return pick.map(function(x){return{q:x[0],a:x[1],o:shuffle(x[2].slice()),l:x[3],x:x[4]||"",rp:S.seen[qh(x[0])]?1:0}})}
 
 var LN=["Bertahap","Mudah","Sedang","Sulit"],NS=[10,25,50,100],PTS=[0,5,10,15],HINT=10;
 var Pk={k:null,l:0,n:10},Q=null;
@@ -1702,7 +1706,7 @@ if(!Q){
 var greet=S.nama?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
 +'<div><h2 style="font-size:24px">Halo, '+esc(S.nama)+'! 👋</h2><p class="small" style="margin:2px 0 0">'+(S.sekolah?esc(S.sekolah)+' · ':'')+'10 Mata Pelajaran (25 soal/sesi)</p></div>'
 +'<div class="row"><button class="btn ghost" id="btn-edit-profil" style="font-size:14px;padding:6px 14px">Ubah Profil</button><button class="btn ghost" id="btn-logout" style="font-size:14px;padding:6px 14px;color:var(--coral)">Logout ⎋</button></div></div>':'';
-el.innerHTML=greet+'<div class="card"><h2>Mau belajar apa hari ini?</h2><p class="small">Pilih pelajaran. Tiap sesi 25 soal baru, dari mudah ke sulit; jawaban benar bernilai 5–15 poin.</p></div><div class="subj">'
+el.innerHTML=greet+'<div class="card"><h2>Mau belajar apa hari ini?</h2><p class="small">Pilih pelajaran. Tiap sesi 25 soal baru, dari mudah ke sulit; jawaban benar bernilai 5–15 poin (soal yang sudah pernah dikerjakan separuh).</p></div><div class="subj">'
 +SUBJ.map(function(s){return'<button data-k="'+s.k+'" style="background:'+s.c+';text-align:center"><span>'+s.e+'</span>'+s.n+'</button>'}).join("")+'</div>';
 if($("btn-edit-profil"))$("btn-edit-profil").onclick=function(){renderLanding(true)};
 if($("btn-logout"))$("btn-logout").onclick=function(){ask("Logout dari akun "+S.nama+"? Poin dan hadiah tetap tersimpan.",doLogout)};
@@ -1721,7 +1725,7 @@ var c=Q.qs[Q.i],locked=false,used=!!c_kk(Q.qs[Q.i]);
 var sn=(subj(Q.k)||{}).n||"Latihan";
 el.innerHTML='<div class="card">'
 +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-+'<p class="small" style="margin:0;font-weight:700">Soal '+(Q.i+1)+' dari '+Q.qs.length+' · '+esc(sn)+(c.sk?' · ↩️ soal yang tadi dilewati':'')+'</p>'
++'<p class="small" style="margin:0;font-weight:700">Soal '+(Q.i+1)+' dari '+Q.qs.length+' · '+esc(sn)+(c.sk?' · ↩️ soal yang tadi dilewati':'')+(c.rp?' · 🔁 soal ulang, poin separuh':'')+'</p>'
 +'<button class="btn ghost" id="btn-exit" style="padding:4px 12px;font-size:13px;border-radius:10px;color:var(--coral)">Keluar Sesi ✕</button></div>'
 +'<div class="bar" aria-hidden="true"><i style="width:'+(Q.i/Q.qs.length*100)+'%"></i></div>'
 +'<div class="q">'+esc(c.q)+'</div><div class="opts">'
@@ -1742,8 +1746,9 @@ if(S.poin<HINT){toast("Poin belum cukup untuk membuka kunci jawaban");return}
 S.poin-=HINT;Q.hints++;used=true;c.kk=1;save();upd();showKey();$("kmsg").textContent="Kunci jawaban dibuka. Soal ini tidak menambah poin."};
 el.querySelectorAll(".opts button").forEach(function(b){b.onclick=function(){if(locked)return;locked=true;
 var good=b.dataset.v===c.a;
-Q.res=Q.res||[];Q.res.push({o:(c.o||[]).map(function(x){return String(x).slice(0,80)}),q:String(c.q).slice(0,160),y:String(b.dataset.v).slice(0,80),a:String(c.a).slice(0,80),ok:good?1:0,kk:used?1:0,sk:c.sk?1:0,x:c.x?String(c.x).slice(0,200):""});
-if(good){b.classList.add("ok");if(!used){var p=PTS[c.l||2];Q.ok++;Q.earn+=p;S.poin+=p;save();upd()}}
+Q.res=Q.res||[];Q.res.push({rp:c.rp?1:0,o:(c.o||[]).map(function(x){return String(x).slice(0,80)}),q:String(c.q).slice(0,160),y:String(b.dataset.v).slice(0,80),a:String(c.a).slice(0,80),ok:good?1:0,kk:used?1:0,sk:c.sk?1:0,x:c.x?String(c.x).slice(0,200):""});
+S.seen=S.seen||{};S.seen[qh(c.q)]=1;
+if(good){b.classList.add("ok");if(!used){var p=PTS[c.l||2];if(c.rp)p=Math.round(p/2);Q.ok++;Q.earn+=p;S.poin+=p;save();upd()}}
 else{b.classList.add("no");showKey();Q.wrong.push(c)}
 var expl=c.x?esc(c.x):(good?"":"Ingat jawaban yang tepat ini, lalu coba soal serupa berikutnya.");
 $("fb").innerHTML='<div class="fb '+(good?'':'no')+'" role="status"><div class="tag">'+(good?"Tepat sekali! 🎉":"Belum tepat, tidak apa-apa 💪")+'</div><p>'+(good?"":"Jawaban yang tepat: <b>"+esc(c.a)+"</b>. ")+expl+'</p></div><div class="row" style="margin-top:12px"><button class="btn sun" id="next">'+(Q.i==Q.qs.length-1?"Lihat hasil":"Soal berikutnya")+' →</button></div>';
@@ -1843,7 +1848,7 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 
 +'<div class="card"><h3>Tambah poin</h3><p class="small">'+(S.role==="ortu"?"Saldo anak: "+(RC&&typeof RC.poin!=="undefined"?RC.poin:"–")+" poin (data terakhir). Perubahan dikirim ke HP anak.":"Saldo sekarang: "+S.poin+" poin")+'</p><div class="row"><input id="adj" type="number" value="10" min="1" style="width:110px" aria-label="Jumlah poin ditambah"><button class="btn" id="plus">Tambah poin</button></div></div>'
 +'<div class="card"><h3>Kurangi poin</h3><p class="small">Masukkan jumlah dan alasannya. Saldo tidak bisa kurang dari 0.</p><div class="row"><input id="sub" type="number" value="5" min="1" style="width:110px" aria-label="Jumlah poin dikurangi"><input id="subwhy" placeholder="Alasan, mis. tidak mengerjakan PR" style="flex:1;min-width:170px"></div><div class="row" style="margin-top:8px"><button class="btn danger" id="minus">Kurangi poin</button></div></div>'
-+'<div class="card"><h3>Daftar hadiah</h3>'+S.hadiah.map(function(r){return'<div class="row" style="justify-content:space-between;margin:8px 0"><span>'+esc(r.e)+' '+esc(r.n)+' · '+r.p+' poin</span><button class="btn ghost" data-d="'+r.id+'">Hapus</button></div>'}).join("")
++'<div class="card"><h3>Daftar hadiah</h3>'+S.hadiah.map(function(r){return'<div class="row" style="margin:10px 0;flex-wrap:wrap;gap:6px"><input data-he="'+r.id+'" value="'+esc(r.e)+'" maxlength="2" style="width:54px" aria-label="Ikon hadiah"><input data-hn="'+r.id+'" value="'+esc(r.n)+'" style="flex:1;min-width:150px" aria-label="Nama hadiah"><input data-hp="'+r.id+'" type="number" min="1" value="'+r.p+'" style="width:96px" aria-label="Poin hadiah"><button class="btn" data-s="'+r.id+'">Simpan</button><button class="btn ghost" data-d="'+r.id+'">Hapus</button></div>'}).join("")
 +'<h3 style="margin-top:14px">Tambah hadiah</h3><div class="row"><input id="ne" placeholder="🎁" maxlength="2" style="width:60px"><input id="nn" placeholder="Nama hadiah" style="flex:1"><input id="np" type="number" placeholder="Poin" min="1" style="width:90px"><button class="btn sun" id="add">Tambah hadiah</button></div></div>'
 +'<div class="card"><h3>Riwayat penukaran</h3>'+(S.riwayat.length?S.riwayat.slice(0,15).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.e)+' '+esc(x.n)+' (−'+x.p+')</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>')+'</div>'
 +'<div class="card"><h3>Sinkron progress (cloud)</h3><p class="small">Role device ini: <b>'+(S.role==="ortu"?"Orang Tua":"Anak")+'</b>. '+(S.role==="ortu"?"Masukkan token yang sama dengan device anak, lalu lihat progress anak.":"Progress dikirim otomatis ke cloud selama token terisi (min. 6 karakter).")+'</p>'
@@ -1873,10 +1878,13 @@ if(S.poin<=0){toast("Saldo poin sudah 0");return}
 var why=$("subwhy").value.trim()||"Tanpa alasan",real=Math.min(v,S.poin);
 ask("Kurangi "+real+" poin? Alasan: "+why,function(){S.poin-=real;logPoin(-real,why);save();upd();renderOrtu();toast("−"+real+" poin")})};
 el.querySelectorAll("[data-d]").forEach(function(b){b.onclick=function(){S.hadiah=S.hadiah.filter(function(x){return x.id!=b.dataset.d});hadiahChanged();renderOrtu()}});
+el.querySelectorAll("[data-s]").forEach(function(b){b.onclick=function(){var id=b.dataset.s,n=el.querySelector('[data-hn="'+id+'"]').value.trim(),p=parseInt(el.querySelector('[data-hp="'+id+'"]').value,10),e=el.querySelector('[data-he="'+id+'"]').value.trim()||"🎁";
+if(!n||!p||p<1){toast("Isi nama hadiah dan jumlah poin");return}
+var h=S.hadiah.filter(function(x){return String(x.id)===id})[0];if(!h)return;h.n=n;h.p=p;h.e=e;hadiahChanged();renderOrtu();toast("Hadiah diperbarui ✅")}});
 $("add").onclick=function(){var n=$("nn").value.trim(),p=parseInt($("np").value,10);
 if(!n||!p||p<1){toast("Isi nama hadiah dan jumlah poin");return}
 S.hadiah.push({id:Date.now(),e:$("ne").value.trim()||"🎁",n:n,p:p});hadiahChanged();renderOrtu();toast("Hadiah ditambahkan")};
-$("rst").onclick=function(){ask("Hapus semua poin, hadiah, dan riwayat?",function(){var pn=S.pin,kd=S.kode,kr=S.kirim,ro=S.role,nm=S.nama,sc=S.sekolah;S=JSON.parse(JSON.stringify(DEF));S.pin=pn;S.kode=kd;S.kirim=kr;S.role=ro;S.nama=nm;S.sekolah=sc;S.v=3;hadiahChanged();upd();renderOrtu()})};
+$("rst").onclick=function(){ask("Hapus semua poin, hadiah, dan riwayat?",function(){var pn=S.pin,kd=S.kode,kr=S.kirim,ro=S.role,nm=S.nama,sc=S.sekolah;S=JSON.parse(JSON.stringify(DEF));S.pin=pn;S.kode=kd;S.kirim=kr;S.role=ro;S.nama=nm;S.sekolah=sc;S.v=6;hadiahChanged();upd();renderOrtu()})};
 $("lock").onclick=function(){unlocked=false;ortuSynced=false;renderOrtu()};
 if(S.role==="ortu"){var cdk=$("cl-msg").parentNode;el.insertBefore(cdk,el.firstChild);setTimeout(function(){if(cloudReady()&&$("cl-lihat"))$("cl-lihat").click()},0)}
 if(S.role==="ortu"&&!ortuSynced){ortuSynced=true;ortuSyncIn()}
