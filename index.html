@@ -74,6 +74,7 @@ input{font:500 16px Nunito,sans-serif;padding:10px;border-radius:12px;border:2px
 <div class="toast hide" id="toast" role="status"></div>
 <script>
 
+var APP_VER="2026-11-15-b";
 /* === SINKRON CLOUD (Supabase) — isi dua nilai ini setelah membuat project Supabase === */
 var SB_URL="https://txghgqydhdohgaiqtzbx.supabase.co",SB_KEY="sb_publishable_FPWxtLDeb3bK8xJrsappRg_WENgqXFj";
 var DEF={nama:"",sekolah:"",poin:100,pin:"",hadiah:[
@@ -105,6 +106,11 @@ function cloudReady(){return !!(SB_URL&&SB_KEY&&S&&S.kode&&S.kode.length>=6)}
 function syncKirim(){S.kirim=(S.role==="anak")&&!!S.kode&&S.kode.length>=6}
 function needLogin(){return !S.role||(S.role==="anak"&&(!S.nama||!S.sekolah))}
 function doLogout(){Q=null;unlocked=false;ortuSynced=false;RC=null;S.nama="";S.sekolah="";S.role="";S.kirim=false;save();upd();renderLanding(false);toast("Berhasil logout")}
+function checkUpdate(){if(location.protocol.indexOf("http")!==0)return;
+fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():""}).then(function(t){var m=t.match(/var APP_VER="([^"]+)"/);if(!m||m[1]===APP_VER)return;var nv=m[1];if(location.search.indexOf("u="+nv)>=0)return;
+var go=function(){location.replace(location.pathname+"?u="+encodeURIComponent(nv))};
+if(!Q){go();return}
+if(document.getElementById("upd-bn"))return;var b=document.createElement("div");b.id="upd-bn";b.style.cssText="position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#2a3166;color:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,.4)";b.innerHTML="<span>Versi baru tersedia. Perbarui setelah sesi selesai.</span>";var bt=document.createElement("button");bt.className="btn sun";bt.textContent="Perbarui";bt.onclick=go;b.appendChild(bt);document.body.appendChild(b)}).catch(function(){})}
 function qh(t){var h=5381,i;t=String(t);for(i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return (h>>>0).toString(36)}
 function logPoin(v,ket){S.poinLog=S.poinLog||[];S.poinLog.unshift({t:new Date().toLocaleDateString("id-ID",{day:"numeric",month:"short"}),v:v,ket:ket});if(S.poinLog.length>50)S.poinLog.length=50}
 var RC=null,ortuSynced=false;
@@ -1925,7 +1931,7 @@ return;
 Q=null;if(needLogin()){renderLanding(false)}else{tab("belajar")}};
 upd();
 if(S.kirim)cloudSoon();
-setTimeout(cloudPull,800);setInterval(cloudPull,45000);document.addEventListener("visibilitychange",function(){if(!document.hidden)cloudPull()});
+setTimeout(cloudPull,800);setInterval(cloudPull,45000);document.addEventListener("visibilitychange",function(){if(!document.hidden){cloudPull();checkUpdate()}});setTimeout(checkUpdate,2000);setInterval(checkUpdate,300000);
 if(needLogin()){renderLanding(false)}else{renderBelajar()}
 </script>
 </body>
