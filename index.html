@@ -1648,6 +1648,7 @@ return pick.map(function(x){return{q:x[0],a:x[1],o:shuffle(x[2].slice()),l:x[3],
 var LN=["Bertahap","Mudah","Sedang","Sulit"],NS=[10,25,50,100],PTS=[0,5,10,15],HINT=10;
 var Pk={k:null,l:0,n:10},Q=null;
 function subj(k){return SUBJ.filter(function(s){return s.k==k})[0]}
+function c_kk(c){return c&&c.kk}
 function renderBelajar(){var el=$("belajar");
 if(!Q){
 var greet=S.nama?'<div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
@@ -1668,26 +1669,29 @@ var rev=Q.wrong.length?'<div class="card"><h3>Soal yang perlu diulang 💪</h3><
 el.innerHTML='<div class="card" style="text-align:center"><div style="font-size:64px">'+(Q.ok/Q.qs.length>=.8?"🏆":"👏")+'</div><h2>Selesai! '+Q.ok+' dari '+Q.qs.length+' benar tanpa kunci jawaban</h2><p class="big" style="font-size:28px">+'+Q.earn+' poin'+(Q.hints?" − "+Q.hints*HINT+" (kunci jawaban)":"")+'</p><div class="row" style="justify-content:center"><button class="btn sun" id="lagi">Belajar lagi</button><button class="btn ghost" id="ke">Lihat hadiah</button></div></div>'+rev;
 $("lagi").onclick=function(){Q=null;renderBelajar()};
 $("ke").onclick=function(){Q=null;tab("hadiah")};return}
-var c=Q.qs[Q.i],locked=false,used=false;
+var c=Q.qs[Q.i],locked=false,used=!!c_kk(Q.qs[Q.i]);
 var sn=(subj(Q.k)||{}).n||"Latihan";
 el.innerHTML='<div class="card">'
 +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-+'<p class="small" style="margin:0;font-weight:700">Soal '+(Q.i+1)+' dari '+Q.qs.length+' · '+esc(sn)+'</p>'
++'<p class="small" style="margin:0;font-weight:700">Soal '+(Q.i+1)+' dari '+Q.qs.length+' · '+esc(sn)+(c.sk?' · ↩️ soal yang tadi dilewati':'')+'</p>'
 +'<button class="btn ghost" id="btn-exit" style="padding:4px 12px;font-size:13px;border-radius:10px;color:var(--coral)">Keluar Sesi ✕</button></div>'
 +'<div class="bar" aria-hidden="true"><i style="width:'+(Q.i/Q.qs.length*100)+'%"></i></div>'
 +'<div class="q">'+esc(c.q)+'</div><div class="opts">'
 +c.o.map(function(o){return'<button data-v="'+esc(o)+'">'+esc(o)+'</button>'}).join("")+'</div>'
 +'<div class="row" style="margin-top:14px;justify-content:space-between">'
 +'<button class="btn ghost" id="key">Buka kunci jawaban (−'+HINT+' poin)</button>'
++(Q.qs.length-Q.i>1?'<button class="btn" id="skip">Lewati dulu ⏭</button>':'')
 +'<button class="btn ghost" id="btn-exit-bottom" style="font-size:13px">Ganti Mapel</button></div>'
 +'<p class="small" id="kmsg" role="status"></p><div id="fb"></div></div>';
 function quitSession(){ask("Keluar dari sesi ini dan kembali memilih mapel? Poin yang sudah kamu dapatkan tetap tersimpan.",function(){Q=null;renderBelajar();toast("Kembali ke pilihan mapel")})}
 $("btn-exit").onclick=quitSession;
 $("btn-exit-bottom").onclick=quitSession;
 function showKey(){el.querySelectorAll(".opts button").forEach(function(x){if(x.dataset.v===c.a)x.classList.add("ok")})}
+if(used){showKey();$("kmsg").textContent="Kunci jawaban sudah dibuka. Soal ini tidak menambah poin."}
+if($("skip"))$("skip").onclick=function(){if(locked)return;var q=Q.qs.splice(Q.i,1)[0];q.sk=1;Q.qs.push(q);toast("Soal dilewati, akan muncul lagi di akhir sesi");renderBelajar()};
 $("key").onclick=function(){if(locked||used)return;
 if(S.poin<HINT){toast("Poin belum cukup untuk membuka kunci jawaban");return}
-S.poin-=HINT;Q.hints++;used=true;save();upd();showKey();$("kmsg").textContent="Kunci jawaban dibuka. Soal ini tidak menambah poin."};
+S.poin-=HINT;Q.hints++;used=true;c.kk=1;save();upd();showKey();$("kmsg").textContent="Kunci jawaban dibuka. Soal ini tidak menambah poin."};
 el.querySelectorAll(".opts button").forEach(function(b){b.onclick=function(){if(locked)return;locked=true;
 var good=b.dataset.v===c.a;
 if(good){b.classList.add("ok");if(!used){var p=PTS[c.l||2];Q.ok++;Q.earn+=p;S.poin+=p;save();upd()}}
