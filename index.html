@@ -11,7 +11,9 @@
 :root[data-theme="dark"]{--bg:#121A38;--card:#1C2650;--ink:#F1F4FF;--mute:#A9B4DD;--line:#2E3A6E}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.5 Nunito,system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media print{html,body{display:none!important}}
+body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.5 Nunito,system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
 h1,h2,h3,.big{font-family:"Baloo 2",system-ui,sans-serif;margin:0;line-height:1.15}
 main{max-width:720px;margin:0 auto;padding:16px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -1645,8 +1647,21 @@ el.innerHTML='<div class="card" style="text-align:center"><div style="font-size:
 $("lagi").onclick=function(){Q=null;renderBelajar()};
 $("ke").onclick=function(){Q=null;tab("hadiah")};return}
 var c=Q.qs[Q.i],locked=false,used=false;
-el.innerHTML='<div class="card"><div class="bar" aria-hidden="true"><i style="width:'+(Q.i/Q.qs.length*100)+'%"></i></div><p class="small">Soal '+(Q.i+1)+' dari '+Q.qs.length+'</p><div class="q">'+esc(c.q)+'</div><div class="opts">'
-+c.o.map(function(o){return'<button data-v="'+esc(o)+'">'+esc(o)+'</button>'}).join("")+'</div><div class="row" style="margin-top:14px"><button class="btn ghost" id="key">Buka kunci jawaban (−'+HINT+' poin)</button></div><p class="small" id="kmsg" role="status"></p><div id="fb"></div></div>';
+var sn=(subj(Q.k)||{}).n||"Latihan";
+el.innerHTML='<div class="card">'
++'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
++'<p class="small" style="margin:0;font-weight:700">Soal '+(Q.i+1)+' dari '+Q.qs.length+' · '+esc(sn)+'</p>'
++'<button class="btn ghost" id="btn-exit" style="padding:4px 12px;font-size:13px;border-radius:10px;color:var(--coral)">Keluar Sesi ✕</button></div>'
++'<div class="bar" aria-hidden="true"><i style="width:'+(Q.i/Q.qs.length*100)+'%"></i></div>'
++'<div class="q">'+esc(c.q)+'</div><div class="opts">'
++c.o.map(function(o){return'<button data-v="'+esc(o)+'">'+esc(o)+'</button>'}).join("")+'</div>'
++'<div class="row" style="margin-top:14px;justify-content:space-between">'
++'<button class="btn ghost" id="key">Buka kunci jawaban (−'+HINT+' poin)</button>'
++'<button class="btn ghost" id="btn-exit-bottom" style="font-size:13px">Ganti Mapel</button></div>'
++'<p class="small" id="kmsg" role="status"></p><div id="fb"></div></div>';
+function quitSession(){ask("Keluar dari sesi ini dan kembali memilih mapel? Poin yang sudah kamu dapatkan tetap tersimpan.",function(){Q=null;renderBelajar();toast("Kembali ke pilihan mapel")})}
+$("btn-exit").onclick=quitSession;
+$("btn-exit-bottom").onclick=quitSession;
 function showKey(){el.querySelectorAll(".opts button").forEach(function(x){if(x.dataset.v===c.a)x.classList.add("ok")})}
 $("key").onclick=function(){if(locked||used)return;
 if(S.poin<HINT){toast("Poin belum cukup untuk membuka kunci jawaban");return}
@@ -1721,14 +1736,13 @@ upd();tab("belajar");
 var unlocked=false;
 function hsh(p){var h=5381,i;p="pb:"+p;for(i=0;i<p.length;i++)h=((h<<5)+h+p.charCodeAt(i))|0;return String(h)}
 function renderPin(){var el=$("ortu"),setup=!S.pin;
-el.innerHTML='<div class="card"><h2>'+(setup?"Buat PIN Orang Tua":"Masukkan PIN Orang Tua")+'</h2><p class="small">'+(setup?"PIN 4 angka untuk melindungi pengaturan poin dan hadiah.":"Bagian ini khusus orang tua.")+'</p><div class="row"><input id="p1" type="password" inputmode="numeric" maxlength="4" placeholder="PIN 4 angka" autocomplete="off" style="width:140px">'+(setup?'<input id="p2" type="password" inputmode="numeric" maxlength="4" placeholder="Ulangi PIN" autocomplete="off" style="width:140px">':'')+'<button class="btn" id="pok">'+(setup?"Simpan PIN":"Buka")+'</button></div><p class="small" id="perr" role="alert" style="color:var(--coral)"></p>'+(!setup?'<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:10px"><button class="btn ghost" id="rpin" style="font-size:14px;padding:6px 12px">Lupa PIN / Refresh PIN</button></div>':'')+'</div>';
+el.innerHTML='<div class="card"><h2>'+(setup?"Buat PIN Orang Tua":"Masukkan PIN Orang Tua")+'</h2><p class="small">'+(setup?"PIN 4 angka untuk melindungi pengaturan poin dan hadiah.":"Bagian ini khusus orang tua.")+'</p><div class="row"><input id="p1" type="password" inputmode="numeric" maxlength="4" placeholder="PIN 4 angka" autocomplete="off" style="width:140px">'+(setup?'<input id="p2" type="password" inputmode="numeric" maxlength="4" placeholder="Ulangi PIN" autocomplete="off" style="width:140px">':'')+'<button class="btn" id="pok">'+(setup?"Simpan PIN":"Buka")+'</button></div><p class="small" id="perr" role="alert" style="color:var(--coral)"></p></div>';
 function go(){var a=$("p1").value;
 if(!/^\d{4}$/.test(a)){$("perr").textContent="PIN harus 4 angka.";return}
 if(setup){if(a!==$("p2").value){$("perr").textContent="PIN tidak sama, coba lagi.";return}S.pin=hsh(a);save();unlocked=true;renderOrtu();toast("PIN baru disimpan 🔒")}
 else if(hsh(a)===S.pin){unlocked=true;renderOrtu()}
 else{$("perr").textContent="PIN salah.";$("p1").value=""}}
 $("pok").onclick=go;$("p1").onkeydown=function(e){if(e.key=="Enter")go()};
-if(!setup){$("rpin").onclick=function(){ask("Refresh PIN orang tua? PIN lama akan dihapus dan Anda bisa membuat PIN baru.",function(){S.pin=null;save();renderPin();toast("PIN di-refresh. Silakan buat PIN baru.")})}}
 }
 
 function renderOrtu(){var el=$("ortu");if(!unlocked){renderPin();return}
@@ -1747,7 +1761,7 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 +'<h3 style="margin-top:14px">Tambah hadiah</h3><div class="row"><input id="ne" placeholder="🎁" maxlength="2" style="width:60px"><input id="nn" placeholder="Nama hadiah" style="flex:1"><input id="np" type="number" placeholder="Poin" min="1" style="width:90px"><button class="btn sun" id="add">Tambah hadiah</button></div></div>'
 +'<div class="card"><h3>Riwayat penukaran</h3>'+(S.riwayat.length?S.riwayat.slice(0,15).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.e)+' '+esc(x.n)+' (−'+x.p+')</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>')+'</div>'
 +'<div class="card"><h3>Riwayat poin</h3>'+(S.poinLog.length?S.poinLog.slice(0,20).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+(x.v>0?"+":"−")+Math.abs(x.v)+' poin · '+esc(x.ket)+'</div>'}).join(""):'<p class="small">Belum ada penambahan atau pengurangan poin manual.</p>')+'</div>'
-+'<div class="card row"><button class="btn" id="lock">Kunci sekarang</button><button class="btn ghost" id="chg">Refresh PIN</button><button class="btn ghost" id="rst">Reset semua data</button></div>';
++'<div class="card row"><button class="btn" id="lock">Kunci sekarang</button><button class="btn ghost" id="rst">Reset semua data</button></div>';
 
 $("svn").onclick=function(){
 S.nama=$("nm").value.trim()||"Juara";
@@ -1771,11 +1785,15 @@ if(!n||!p||p<1){toast("Isi nama hadiah dan jumlah poin");return}
 S.hadiah.push({id:Date.now(),e:$("ne").value.trim()||"🎁",n:n,p:p});save();renderOrtu();toast("Hadiah ditambahkan")};
 $("rst").onclick=function(){ask("Hapus semua poin, hadiah, dan riwayat?",function(){var pn=S.pin;S=JSON.parse(JSON.stringify(DEF));S.pin=pn;save();upd();renderOrtu()})};
 $("lock").onclick=function(){unlocked=false;renderOrtu()};
-$("chg").onclick=function(){ask("Refresh PIN orang tua? Anda dapat membuat PIN baru setelah di-refresh.",function(){S.pin=null;unlocked=false;save();renderOrtu();toast("PIN di-refresh. Silakan buat PIN baru.")})};
 }
 
 function upd(){$("pts").textContent=S.poin+" poin";$("hi").textContent=S.nama?("Halo, "+S.nama+"!"):"Arena Juara"}
-function tab(t){if(t!="ortu")unlocked=false;
+function tab(t){
+if(Q&&Q.i<Q.qs.length&&t!="belajar"){
+ask("Keluar dari sesi latihan ini dan membuka menu "+(t=="hadiah"?"Hadiah":"Orang Tua")+"?",function(){Q=null;tab(t)});
+return;
+}
+if(t!="ortu")unlocked=false;
 $("landing").classList.add("hide");
 $("nav").classList.remove("hide");
 $("pts").classList.remove("hide");
@@ -1784,7 +1802,12 @@ document.querySelectorAll("nav button").forEach(function(b){b.setAttribute("aria
 if(t=="belajar")renderBelajar();if(t=="hadiah")renderHadiah();if(t=="ortu")renderOrtu()}
 document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){tab(b.dataset.t)}});
 function ask(msg,yes){$("dmsg").textContent=msg;$("dlg").classList.remove("hide");$("dyes").onclick=function(){$("dlg").classList.add("hide");yes()};$("dno").onclick=function(){$("dlg").classList.add("hide")};$("dyes").focus()}
-$("home").onclick=function(){if(Q&&Q.i<Q.qs.length){toast("Selesaikan sesi ini dulu ya: soal "+(Q.i+1)+" dari "+Q.qs.length);return}Q=null;if(!S.nama||!S.sekolah){renderLanding(false)}else{tab("belajar")}};
+$("home").onclick=function(){
+if(Q&&Q.i<Q.qs.length){
+ask("Keluar dari sesi ini dan kembali memilih mapel?",function(){Q=null;tab("belajar");toast("Kembali ke pilihan mapel")});
+return;
+}
+Q=null;if(!S.nama||!S.sekolah){renderLanding(false)}else{tab("belajar")}};
 upd();
 if(!S.nama||!S.sekolah){renderLanding(false)}else{renderBelajar()}
 </script>
