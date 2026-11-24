@@ -11,7 +11,7 @@
 :root[data-theme="dark"]{--bg:#121A38;--card:#1C2650;--ink:#F1F4FF;--mute:#A9B4DD;--line:#2E3A6E}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.5 Nunito,system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 17px/1.5 Nunito,system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
 h1,h2,h3,.big{font-family:"Baloo 2",system-ui,sans-serif;margin:0;line-height:1.15}
 main{max-width:720px;margin:0 auto;padding:16px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -74,7 +74,7 @@ input{font:500 16px Nunito,sans-serif;padding:10px;border-radius:12px;border:2px
 <div class="toast hide" id="toast" role="status"></div>
 <script>
 
-var APP_VER="2026-11-15-b";
+var APP_VER="2026-11-25-a";
 /* === SINKRON CLOUD (Supabase) — isi dua nilai ini setelah membuat project Supabase === */
 var SB_URL="https://txghgqydhdohgaiqtzbx.supabase.co",SB_KEY="sb_publishable_FPWxtLDeb3bK8xJrsappRg_WENgqXFj";
 var DEF={nama:"",sekolah:"",poin:100,pin:"",hadiah:[
@@ -98,12 +98,29 @@ if(S.v<4){var NP4={"Uang Tunai Rp. 50.000": 1450, "Kuota 10 GB": 2900, "Voucher 
 if(S.v<5){var NP5={"Uang Tunai Rp. 50.000": [1450, 5800], "Kuota 10 GB": [2900, 11600], "Voucher Yogya / Indomaret Rp. 100.000": [2900, 11600], "Voucher Decathlon Rp. 150.000": [4350, 17400], "Strap Gitar Planet Waves": [4350, 17400], "Nonton Bioskop": [4350, 17400], "Makan di Marugame Udon": [5800, 23200], "Jersey Kelme": [10150, 40600], "Parfum Mykonos / HMNS": [11600, 46400]},ch5=false;S.hadiah.forEach(function(h){var m=NP5[h.n];if(m&&h.p===m[0]){h.p=m[1];ch5=true}});S.v=5;if(ch5)S.hv=Date.now();save();if(ch5)setTimeout(function(){if(typeof hadiahChanged==="function")hadiahChanged()},1500)}
 if(S.v<6){var NP6={"Uang Tunai Rp. 50.000": [5800, 2200], "Kuota 10 GB": [11600, 3300], "Voucher Yogya / Indomaret Rp. 100.000": [11600, 4100], "Voucher Decathlon Rp. 150.000": [17400, 5500], "Strap Gitar Planet Waves": [17400, 4900], "Nonton Bioskop": [17400, 6300], "Makan di Marugame Udon": [23200, 6800], "Jersey Kelme": [40600, 13600], "Parfum Mykonos / HMNS": [46400, 18000]},ch6=false;S.hadiah.forEach(function(h){var m=NP6[h.n];if(m&&h.p===m[0]){h.p=m[1];ch6=true}});S.seen=S.seen||{};for(var k6 in (S.used||{}))(S.used[k6]||[]).forEach(function(t){S.seen[qh(t)]=1});S.v=6;if(ch6)S.hv=Date.now();save();if(ch6)setTimeout(function(){if(typeof hadiahChanged==="function")hadiahChanged()},1500)}
 if(typeof S.sekolah==="undefined")S.sekolah="";
+if(typeof S.at==="undefined")S.at=0;
 if(!S.poinLog)S.poinLog=[];
 if(!S.used)S.used={};
 function save(){try{localStorage.setItem("pb-state",JSON.stringify(S))}catch(e){}if(S&&S.kirim)cloudSoon()}
 function sbCall(fn,args){return fetch(SB_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(args)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text().then(function(t){return t?JSON.parse(t):null})})}
 function cloudReady(){return !!(SB_URL&&SB_KEY&&S&&S.kode&&S.kode.length>=6)}
 function syncKirim(){S.kirim=(S.role==="anak")&&!!S.kode&&S.kode.length>=6}
+/* HP baru / data lokal masih kosong? Jangan timpa cloud dengan poin awal. */
+function isFreshState(){return (!S.sesi||!S.sesi.length)&&(!S.riwayat||!S.riwayat.length)&&(!S.poinLog||!S.poinLog.length)&&(S.poin===100||S.poin===0)}
+function cloudProgressPull(){
+if(S.role!=="anak"||!cloudReady())return Promise.resolve("skip");
+if(Q&&Q.i<Q.qs.length)return Promise.resolve("sesi");
+return sbCall("get_progress",{p_id:S.kode}).then(function(rows){
+var d=rows&&rows[0]&&rows[0].data;if(!d)return "kosong";
+var mine=S.at||0,theirs=d.at||0,fresh=isFreshState();
+if(!(fresh||(theirs&&theirs>mine)))return "lokal";
+["poin","riwayat","poinLog","sesi","hadiah","nama","sekolah"].forEach(function(k){if(typeof d[k]!=="undefined")S[k]=d[k]});
+S.at=theirs||mine;S.sig=null;
+try{localStorage.setItem("pb-state",JSON.stringify(S))}catch(e){}
+upd();if(!$("belajar").classList.contains("hide"))renderBelajar();
+if(!$("ortu").classList.contains("hide"))renderOrtu();
+toast("Progres dari HP lain dipulihkan: "+S.poin+" poin ✅");
+return "cloud"}).catch(function(){return "gagal"})}
 function needLogin(){return !S.role||(S.role==="anak"&&(!S.nama||!S.sekolah))}
 function doLogout(){Q=null;unlocked=false;ortuSynced=false;RC=null;S.nama="";S.sekolah="";S.role="";S.kirim=false;save();upd();renderLanding(false);toast("Berhasil logout")}
 function checkUpdate(){if(location.protocol.indexOf("http")!==0)return;
@@ -162,7 +179,9 @@ box.innerHTML='<h3 style="margin-top:12px">'+esc(d.nama||"-")+(d.sekolah?" · "+
 var f=box.querySelector("#rv-f");if(f)f.onchange=function(){box.querySelectorAll(".rv-ok").forEach(function(e){e.style.display=f.checked?"none":""})}}
 function cloudSoon(){clearTimeout(cloudSoon.h);cloudSoon.h=setTimeout(function(){cloudPush()},1500)}
 function cloudPush(){if(S.role!=="anak"||!S.kirim||!cloudReady())return Promise.resolve(false);
-var d={nama:S.nama,sekolah:S.sekolah,poin:S.poin,riwayat:(S.riwayat||[]).slice(0,50),poinLog:(S.poinLog||[]).slice(0,50),sesi:(S.sesi||[]).slice(0,100).map(function(x,i){if(i<20)return x;var y={};for(var k in x)if(k!=="res")y[k]=x[k];return y}),hadiah:S.hadiah};
+var sig=S.poin+"|"+((S.sesi||[]).length)+"|"+((S.riwayat||[]).length)+"|"+((S.hadiah||[]).length);
+if(sig!==S.sig){S.sig=sig;S.at=Date.now()}
+var d={nama:S.nama,sekolah:S.sekolah,poin:S.poin,riwayat:(S.riwayat||[]).slice(0,50),poinLog:(S.poinLog||[]).slice(0,50),sesi:(S.sesi||[]).slice(0,100).map(function(x,i){if(i<20)return x;var y={};for(var k in x)if(k!=="res")y[k]=x[k];return y}),hadiah:S.hadiah,at:S.at||Date.now()};
 return sbCall("save_progress",{p_id:S.kode,p_data:d}).then(function(){return true}).catch(function(){return false})}
 function $(i){return document.getElementById(i)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -1718,7 +1737,7 @@ if($("btn-edit-profil"))$("btn-edit-profil").onclick=function(){renderLanding(tr
 if($("btn-logout"))$("btn-logout").onclick=function(){ask("Logout dari akun "+S.nama+"? Poin dan hadiah tetap tersimpan.",doLogout)};
 el.querySelectorAll("[data-k]").forEach(function(b){b.onclick=function(){Pk.k=b.dataset.k;Pk.l=0;Pk.n=10;
 var sj=subj(Pk.k)||{};
-el.innerHTML='<div class="card" style="text-align:center;padding:28px 18px"><div style="font-size:56px;line-height:1">'+(sj.e||"📚")+'</div><h2 style="margin:8px 0">'+esc(sj.n||"Latihan")+'</h2><p style="font-size:20px;font-weight:700;line-height:1.5;max-width:460px;margin:12px auto 20px">Percaya pada diri sendiri, jangan berbuat curang, jangan lupa ucap Bismillah 🤲</p><div class="row" style="justify-content:center"><button class="btn sun" id="pre-go">Bismillah, Mulai 🚀</button><button class="btn ghost" id="pre-back">Kembali</button></div></div>';
+el.innerHTML='<div class="card" style="text-align:center;padding:28px 18px"><div style="font-size:56px;line-height:1">'+(sj.e||"📚")+'</div><h2 style="margin:8px 0">'+esc(sj.n||"Latihan")+'</h2><p style="font-size:20px;font-weight:700;line-height:1.5;max-width:460px;margin:12px auto 20px">Kerjakan sendiri dengan jujur tanpa bantuan orang lain atau bertanya pada AI. Tetap di halaman ini sampai selesai ya! 🤲 Jangan lupa ucap Bismillah.</p><div class="row" style="justify-content:center"><button class="btn sun" id="pre-go">Bismillah, Mulai 🚀</button><button class="btn ghost" id="pre-back">Kembali</button></div></div>';
 $("pre-go").onclick=function(){Q={k:Pk.k,qs:makeQs(Pk.k,0,25),i:0,ok:0,earn:0,hints:0,wrong:[],res:[]};renderBelajar()};
 $("pre-back").onclick=function(){renderBelajar()}}});return}
 if(Q.i>=Q.qs.length){
@@ -1814,7 +1833,7 @@ $("landing").classList.add("hide");
 $("nav").classList.remove("hide");
 $("pts").classList.remove("hide");
 upd();
-if(role==="ortu"){unlocked=false;toast("Mode Orang Tua 🔒");tab("ortu")}else{toast("Selamat datang, "+S.nama+"! 🌟");tab("belajar");if(S.kirim)cloudSoon()}
+if(role==="ortu"){unlocked=false;toast("Mode Orang Tua 🔒");tab("ortu")}else{toast("Selamat datang, "+S.nama+"! 🌟");tab("belajar");if(S.kirim)cloudProgressPull().then(function(){cloudSoon()});else setTimeout(function(){toast("Tanpa token, poin hanya tersimpan di HP ini. Isi token agar tersinkron.")},3000)}
 }
 setRole(role);
 $("lp-btn").onclick=go;
@@ -1857,9 +1876,9 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 +'<div class="card"><h3>Daftar hadiah</h3>'+S.hadiah.map(function(r){return'<div class="row" style="margin:10px 0;flex-wrap:wrap;gap:6px"><input data-he="'+r.id+'" value="'+esc(r.e)+'" maxlength="2" style="width:54px" aria-label="Ikon hadiah"><input data-hn="'+r.id+'" value="'+esc(r.n)+'" style="flex:1;min-width:150px" aria-label="Nama hadiah"><input data-hp="'+r.id+'" type="number" min="1" value="'+r.p+'" style="width:96px" aria-label="Poin hadiah"><button class="btn" data-s="'+r.id+'">Simpan</button><button class="btn ghost" data-d="'+r.id+'">Hapus</button></div>'}).join("")
 +'<h3 style="margin-top:14px">Tambah hadiah</h3><div class="row"><input id="ne" placeholder="🎁" maxlength="2" style="width:60px"><input id="nn" placeholder="Nama hadiah" style="flex:1"><input id="np" type="number" placeholder="Poin" min="1" style="width:90px"><button class="btn sun" id="add">Tambah hadiah</button></div></div>'
 +'<div class="card"><h3>Riwayat penukaran</h3>'+(S.riwayat.length?S.riwayat.slice(0,15).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+esc(x.e)+' '+esc(x.n)+' (−'+x.p+')</div>'}).join(""):'<p class="small">Belum ada penukaran.</p>')+'</div>'
-+'<div class="card"><h3>Sinkron progress (cloud)</h3><p class="small">Role device ini: <b>'+(S.role==="ortu"?"Orang Tua":"Anak")+'</b>. '+(S.role==="ortu"?"Masukkan token yang sama dengan device anak, lalu lihat progress anak.":"Progress dikirim otomatis ke cloud selama token terisi (min. 6 karakter).")+'</p>'
++'<div class="card"><h3>Sinkron progress (cloud)</h3><p class="small">Role device ini: <b>'+(S.role==="ortu"?"Orang Tua":"Anak")+'</b>. '+(S.role==="ortu"?"Masukkan token yang sama dengan device anak, lalu lihat progress anak.":"Poin dan riwayat tersimpan di cloud per token. Di HP lain, isi <b>token yang sama</b> saat login, lalu poin lama otomatis diambil (tidak tertimpa poin baru).")+'</p>'
 +'<div class="row"><input id="cl-kode" placeholder="isikan token" maxlength="40" autocomplete="off" style="flex:1;min-width:170px" value="'+esc(S.kode||"")+'"></div>'
-+'<div class="row" style="margin-top:8px">'+(S.role==="ortu"?'<button class="btn" id="cl-lihat">Lihat hasil pekerjaan anak</button>':'<button class="btn sun" id="cl-now">Kirim sekarang</button><button class="btn" id="cl-local">Lihat hasil pekerjaan</button>')+'<button class="btn ghost" id="cl-out">Ganti Role / Logout</button></div>'
++'<div class="row" style="margin-top:8px">'+(S.role==="ortu"?'<button class="btn" id="cl-lihat">Lihat hasil pekerjaan anak</button>':'<button class="btn sun" id="cl-now">Kirim sekarang</button><button class="btn" id="cl-pull">Ambil dari cloud</button><button class="btn" id="cl-local">Lihat hasil pekerjaan</button>')+'<button class="btn ghost" id="cl-out">Ganti Role / Logout</button></div>'
 +'<p class="small" id="cl-msg" role="status">'+(SB_URL&&SB_KEY?"":"Cloud belum disetel: isi SB_URL dan SB_KEY di index.html.")+'</p><div id="cl-view"></div></div>'
 +'<div class="card"><h3>Riwayat poin</h3>'+(S.poinLog.length?S.poinLog.slice(0,20).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+(x.v>0?"+":"−")+Math.abs(x.v)+' poin · '+esc(x.ket)+'</div>'}).join(""):'<p class="small">Belum ada penambahan atau pengurangan poin manual.</p>')+'</div>'
 +'<div class="card row"><button class="btn" id="lock">Kunci sekarang</button><button class="btn ghost" id="rst">Reset semua data</button></div>';
@@ -1899,7 +1918,9 @@ $("cl-kode").onchange=function(){S.kode=this.value.trim();syncKirim();save();if(
 $("cl-out").onclick=function(){ask("Ganti role / logout dari device ini? Poin dan hadiah tetap tersimpan.",doLogout)};
 if($("cl-local"))$("cl-local").onclick=function(){renderReview($("cl-view"),{nama:S.nama,sekolah:S.sekolah,poin:S.poin,sesi:S.sesi,riwayat:S.riwayat})};
 if($("cl-now"))$("cl-now").onclick=function(){S.kode=$("cl-kode").value.trim();save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
-var k=S.kirim;S.kirim=true;clMsg("Mengirim…");cloudPush().then(function(ok){S.kirim=k;clMsg(ok?"Berhasil terkirim ✅":"Gagal mengirim. Cek koneksi dan pengaturan Supabase.")})};
+var k=S.kirim;S.kirim=true;clMsg("Mengirim…");cloudProgressPull().then(function(){return cloudPush()}).then(function(ok){S.kirim=k;clMsg(ok?"Berhasil terkirim ✅ ("+S.poin+" poin)":"Gagal mengirim. Cek koneksi dan pengaturan Supabase.")})};
+if($("cl-pull"))$("cl-pull").onclick=function(){S.kode=$("cl-kode").value.trim();syncKirim();save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
+clMsg("Mengambil data cloud…");cloudProgressPull().then(function(r){clMsg(r==="cloud"?"Data cloud dipulihkan ✅ ("+S.poin+" poin)":(r==="kosong"?"Belum ada data cloud untuk token ini.":(r==="sesi"?"Selesaikan sesi dulu, lalu ambil data cloud.":(r==="gagal"?"Gagal mengambil data. Cek koneksi.":"Data lokal sudah yang terbaru."))))})};
 if($("cl-lihat"))$("cl-lihat").onclick=function(){var kd=$("cl-kode").value.trim();S.kode=kd;save();if(!cloudReady()){clMsg(SB_URL&&SB_KEY?"Isi token minimal 6 karakter.":"Cloud belum disetel di index.html.");return}
 clMsg("Mengambil data…");sbCall("get_progress",{p_id:kd}).then(function(rows){var r=rows&&rows[0];if(!r){clMsg("Belum ada data untuk token ini.");$("cl-view").innerHTML="";return}
 var d=r.data||{};RC=d;var fm=function(t){try{return new Date(t).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}};
@@ -1930,8 +1951,37 @@ return;
 }
 Q=null;if(needLogin()){renderLanding(false)}else{tab("belajar")}};
 upd();
-if(S.kirim)cloudSoon();
-setTimeout(cloudPull,800);setInterval(cloudPull,45000);document.addEventListener("visibilitychange",function(){if(!document.hidden){cloudPull();checkUpdate()}});setTimeout(checkUpdate,2000);setInterval(checkUpdate,300000);
+if(S.kirim)cloudProgressPull().then(function(){cloudSoon()});
+setTimeout(cloudPull,900);setTimeout(function(){if(S.kirim)cloudProgressPull()},1200);setInterval(function(){if(S.kirim)cloudProgressPull()},60000);setInterval(cloudPull,45000);document.addEventListener("visibilitychange",function(){if(!document.hidden){cloudPull();checkUpdate()}});setTimeout(checkUpdate,2000);setInterval(checkUpdate,300000);
+/* Proteksi Integritas Ujian */
+window.addEventListener("keyup", function(e) {
+  if (e.key === "PrintScreen" || e.keyCode === 44) {
+    try { navigator.clipboard.writeText(""); } catch(err) {}
+    toast("⚠️ Tangkapan layar dilarang selama sesi latihan!");
+  }
+});
+document.addEventListener("contextmenu", function(e) {
+  if (window.Q && window.Q.i < window.Q.qs.length) {
+    e.preventDefault();
+    toast("⚠️ Fitur klik kanan dinonaktifkan demi integritas ujian!");
+  }
+});
+document.addEventListener("copy", function(e) {
+  if (window.Q && window.Q.i < window.Q.qs.length) {
+    e.preventDefault();
+    toast("⚠️ Dilarang menyalin teks soal!");
+  }
+});
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden && window.Q && window.Q.i < window.Q.qs.length) {
+    toast("⚠️ Peringatan: Dilarang minimize browser atau membuka tab/halaman lain saat sesi berlangsung!");
+  }
+});
+window.addEventListener("blur", function() {
+  if (window.Q && window.Q.i < window.Q.qs.length) {
+    toast("⚠️ Peringatan: Tetap fokus di halaman Arena Juara, jangan membuka aplikasi lain!");
+  }
+});
 if(needLogin()){renderLanding(false)}else{renderBelajar()}
 </script>
 </body>
