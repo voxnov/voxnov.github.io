@@ -1881,7 +1881,16 @@ el.innerHTML='<div class="card"><h3>Profil Siswa</h3><p class="small">Nama dan a
 +'<div class="row" style="margin-top:8px">'+(S.role==="ortu"?'<button class="btn" id="cl-lihat">Lihat hasil pekerjaan anak</button>':'<button class="btn sun" id="cl-now">Kirim sekarang</button><button class="btn" id="cl-pull">Ambil dari cloud</button><button class="btn" id="cl-local">Lihat hasil pekerjaan</button>')+'<button class="btn ghost" id="cl-out">Ganti Role / Logout</button></div>'
 +'<p class="small" id="cl-msg" role="status">'+(SB_URL&&SB_KEY?"":"Cloud belum disetel: isi SB_URL dan SB_KEY di index.html.")+'</p><div id="cl-view"></div></div>'
 +'<div class="card"><h3>Riwayat poin</h3>'+(S.poinLog.length?S.poinLog.slice(0,20).map(function(x){return'<div class="small" style="margin:6px 0">'+esc(x.t)+' · '+(x.v>0?"+":"−")+Math.abs(x.v)+' poin · '+esc(x.ket)+'</div>'}).join(""):'<p class="small">Belum ada penambahan atau pengurangan poin manual.</p>')+'</div>'
-+'<div class="card row"><button class="btn" id="lock">Kunci sekarang</button><button class="btn ghost" id="rst">Reset semua data</button></div>';
++'<div class="card">'
++'<h3 style="margin-bottom:8px">Pilihan Reset Khusus</h3>'
++'<p class="small" style="margin-bottom:12px">Pilih bagian yang ingin di-reset tanpa menghapus data lainnya:</p>'
++'<div class="row" style="flex-wrap:wrap;gap:8px">'
++'<button class="btn ghost" id="rst-soal" style="color:var(--coral)">Reset Pengisian Soal</button>'
++'<button class="btn ghost" id="rst-poin" style="color:var(--coral)">Reset Poin</button>'
++'<button class="btn ghost" id="rst-hadiah" style="color:var(--coral)">Reset Hadiah</button>'
++'</div>'
++'<div style="margin-top:16px"><button class="btn" id="lock">Kunci sekarang 🔒</button></div>'
++'</div>';
 
 $("svn").onclick=function(){
 S.nama=$("nm").value.trim()||"Juara";
@@ -1909,7 +1918,44 @@ var h=S.hadiah.filter(function(x){return String(x.id)===id})[0];if(!h)return;h.n
 $("add").onclick=function(){var n=$("nn").value.trim(),p=parseInt($("np").value,10);
 if(!n||!p||p<1){toast("Isi nama hadiah dan jumlah poin");return}
 S.hadiah.push({id:Date.now(),e:$("ne").value.trim()||"🎁",n:n,p:p});hadiahChanged();renderOrtu();toast("Hadiah ditambahkan")};
-$("rst").onclick=function(){ask("Hapus semua poin, hadiah, dan riwayat?",function(){var pn=S.pin,kd=S.kode,kr=S.kirim,ro=S.role,nm=S.nama,sc=S.sekolah;S=JSON.parse(JSON.stringify(DEF));S.pin=pn;S.kode=kd;S.kirim=kr;S.role=ro;S.nama=nm;S.sekolah=sc;S.v=6;hadiahChanged();upd();renderOrtu()})};
+// Reset Pengisian Soal (riwayat kuis & status soal pernah keluar agar bisa diulang dari awal)
+$("rst-soal").onclick=function(){
+  ask("Reset riwayat pengisian soal? Riwayat kuis dan status pengulangan 5 sesi akan dikosongkan (poin & hadiah tetap aman).", function(){
+    S.used = {};
+    S.seen = {};
+    S.riwayat = [];
+    S.sesi = [];
+    save();
+    upd();
+    renderOrtu();
+    toast("Pengisian soal berhasil di-reset! 🔄");
+  });
+};
+
+// Reset Poin (kembalikan poin ke saldo awal 100 dan kosongkan log riwayat poin)
+$("rst-poin").onclick=function(){
+  ask("Reset saldo poin? Poin akan kembali ke 100 dan log poin dikosongkan (soal & daftar hadiah tetap aman).", function(){
+    S.poin = 100;
+    S.poinLog = [];
+    logPoin(100, "Reset poin oleh orang tua");
+    save();
+    upd();
+    renderOrtu();
+    toast("Poin berhasil di-reset ke 100! 🔄");
+  });
+};
+
+// Reset Hadiah (kembalikan daftar hadiah ke daftar bawaan standar)
+$("rst-hadiah").onclick=function(){
+  ask("Reset daftar hadiah ke daftar bawaan standar? (Poin & riwayat soal tetap aman).", function(){
+    S.hadiah = JSON.parse(JSON.stringify(DEF.hadiah));
+    hadiahChanged();
+    save();
+    upd();
+    renderOrtu();
+    toast("Daftar hadiah berhasil di-reset! 🔄");
+  });
+};
 $("lock").onclick=function(){unlocked=false;ortuSynced=false;renderOrtu()};
 if(S.role==="ortu"){var cdk=$("cl-msg").parentNode;el.insertBefore(cdk,el.firstChild);setTimeout(function(){if(cloudReady()&&$("cl-lihat"))$("cl-lihat").click()},0)}
 if(S.role==="ortu"&&!ortuSynced){ortuSynced=true;ortuSyncIn()}
